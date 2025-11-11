@@ -12,6 +12,11 @@ repositories {
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
+    implementation  group: 'org.quartz-scheduler', name: 'quartz', version: '2.3.2', {
+        exclude group:'com.zaxxer'
+        exclude group:'org.slf4j' // 与idea自带的冲突
+        exclude group:'com.mchange'
+    }
 }
 
 // Configure Java compilation

@@ -1,21 +1,44 @@
 package com.hxc.stockrecord.toolwindow;
 
+import com.google.common.base.Joiner;
+import com.hxc.stockrecord.entity.StockInfo;
+import com.hxc.stockrecord.model.StockData;
 import com.hxc.stockrecord.settings.StockSettingsState;
+import com.hxc.stockrecord.utils.HttpClientPool;
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 
 public class StockToolWindowFactory implements ToolWindowFactory {
+    private static final String URL = "http://qt.gtimg.cn/q=";
+    private static final Pattern DEFAULT_STOCK_PATTERN = Pattern.compile("var hq_str_(\\w+?)=\"(.*?)\";");
+    private static final Logger log = LoggerFactory.getLogger(StockToolWindowFactory.class);
+    public static final String NAME = "Stock";
+
+
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         StockToolWindow stockToolWindow = new StockToolWindow(project);
@@ -98,12 +121,17 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             buttonPanel.add(deleteButton);
 
             panel.add(buttonPanel, BorderLayout.SOUTH);
+            if (tableModel.getRowCount() > 0) {
+                //开启定时任务
+
+            }
 
             // 初始化数据
             refreshData();
         }
 
         private void refreshData() {
+            PropertiesComponent instance = PropertiesComponent.getInstance();
             ApplicationManager.getApplication().invokeLater(() -> {
                 StockSettingsState state = StockSettingsState.getInstance();
                 if (state == null) {
@@ -112,13 +140,18 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 if (state.stocks == null) {
                     state.stocks = new ArrayList<>();
                 }
+                List<String> codeList = state.stocks.stream().map(stock -> stock.getCode()).toList();
 
+                Map<String, String> stockMap = new HashMap<>();
+                if (CollectionUtils.isNotEmpty(codeList)) {
+                    stockMap = pollStock(codeList).stream().collect(Collectors.toMap(StockInfo::getCode, StockInfo::getNow));
+                }
                 tableModel.setRowCount(0);
-                for (StockSettingsState.Stock stock : state.stocks) {
+                for (StockData stock : state.stocks) {
                     Object[] row = {
                             stock.getCode(),
                             stock.getName(),
-                            stock.getCurrentPrice(),
+                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()) : stock.getCurrentPrice(),
                             stock.getBuyPrice(),
                             stock.getSellPrice(),
                             stock.getIncreaseRate(),
@@ -165,7 +198,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
                 if (result == JOptionPane.OK_OPTION) {
                     try {
-                        StockSettingsState.Stock newStock = new StockSettingsState.Stock();
+                        StockData newStock = new StockData();
                         newStock.setCode(codeField.getText());
                         newStock.setName(nameField.getText());
                         newStock.setCurrentPrice(Double.parseDouble(priceField.getText()));
@@ -212,4 +245,79 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             return panel;
         }
     }
+
+    private static List<StockInfo> pollStock(List<String> code) {
+        List<StockInfo> stockInfoList = new ArrayList<>();
+        List<String> codeList = new ArrayList<>();
+        Map<String, String[]> codeMap = new HashMap<>();
+        for (String str : code) {
+            //兼容原有设置
+            String[] strArray;
+            if (str.contains(",")) {
+                strArray = str.split(",");
+            } else {
+                strArray = new String[]{str};
+            }
+            codeList.add(strArray[0]);
+            codeMap.put(strArray[0], strArray);
+        }
+
+        String params = Joiner.on(",").join(codeList);
+        try {
+            String res = HttpClientPool.getHttpClient().get(URL + params);
+            stockInfoList = handleResponse(res, codeMap);
+        } catch (Exception e) {
+            log.error("实时数据获取失败", e.getMessage());
+        }
+        return stockInfoList;
+    }
+
+    public static List<StockInfo> handleResponse(String response, Map<String, String[]> codeMap) {
+        List<StockInfo> stockInfoList = new ArrayList<>();
+        for (String line : response.split("\n")) {
+            String code = line.substring(line.indexOf("_") + 1, line.indexOf("="));
+            String dataStr = line.substring(line.indexOf("=") + 2, line.length() - 2);
+            String[] values = dataStr.split("~");
+            StockInfo bean = new StockInfo(code, codeMap);
+            bean.setName(values[1]);
+            bean.setNow(values[3]);
+            bean.setChange(values[31]);
+            bean.setChangePercent(values[32]);
+            bean.setTime(values[30]);
+            bean.setMax(values[33]);//33
+            bean.setMin(values[34]);//34
+
+            BigDecimal now = new BigDecimal(values[3]);
+            String costPriceStr = bean.getCostPrise();
+            if (StringUtils.isNotEmpty(costPriceStr)) {
+                BigDecimal costPriceDec = new BigDecimal(costPriceStr);
+                BigDecimal incomeDiff = now.add(costPriceDec.negate());
+                if (costPriceDec.compareTo(BigDecimal.ZERO) <= 0) {
+                    bean.setIncomePercent("0");
+                } else {
+                    BigDecimal incomePercentDec = incomeDiff.divide(costPriceDec, 5, RoundingMode.HALF_UP)
+                            .multiply(BigDecimal.TEN)
+                            .multiply(BigDecimal.TEN)
+                            .setScale(3, RoundingMode.HALF_UP);
+                    bean.setIncomePercent(incomePercentDec.toString());
+                }
+
+                String bondStr = bean.getBonds();
+                if (StringUtils.isNotEmpty(bondStr)) {
+                    BigDecimal bondDec = new BigDecimal(bondStr);
+                    BigDecimal incomeDec = incomeDiff.multiply(bondDec)
+                            .setScale(2, RoundingMode.HALF_UP);
+                    bean.setIncome(incomeDec.toString());
+                }
+            }
+            stockInfoList.add(bean);
+
+        }
+
+        return stockInfoList;
+    }
+
+
+
+
 }

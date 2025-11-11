@@ -21,6 +21,14 @@ public class StockData {
         this.sellPrice = sellPrice;
     }
 
+    public StockData() {
+        this.code = this.code;
+        this.name = this.name;
+        this.currentPrice = this.currentPrice;
+        this.buyPrice = this.buyPrice;
+        this.sellPrice = this.sellPrice;
+    }
+
     public double getIncreaseRate() {
         if (buyPrice == 0) {
             return 0;

@@ -1,5 +1,6 @@
 package com.hxc.stockrecord.settings;
 
+import com.hxc.stockrecord.model.StockData;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
@@ -29,13 +30,13 @@ public class StockSettingsConfigurable implements Configurable {
 
     @Override
     public boolean isModified() {
-        List<StockSettingsState.Stock> currentStocks = settingsComponent.getStocks();
+        List<StockData> currentStocks = settingsComponent.getStocks();
         return !currentStocks.equals(settings.stocks);
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        List<StockSettingsState.Stock> newStocks = settingsComponent.getStocks();
+        List<StockData> newStocks = settingsComponent.getStocks();
         // 确保类型匹配
         settings.stocks = newStocks != null ? new ArrayList<>(newStocks) : new ArrayList<>();
     }

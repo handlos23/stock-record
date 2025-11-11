@@ -1,5 +1,6 @@
 package com.hxc.stockrecord.settings;
 
+import com.hxc.stockrecord.model.StockData;
 import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
@@ -42,7 +43,7 @@ public class StockSettingsComponent {
     }
 
     private void addStock() {
-        StockSettingsState.Stock newStock = new StockSettingsState.Stock();
+        StockData newStock = new StockData();
         newStock.setCode("");
         newStock.setName("");
         newStock.setCurrentPrice(0.0);
@@ -67,19 +68,19 @@ public class StockSettingsComponent {
         return stockTable;
     }
 
-    public List<StockSettingsState.Stock> getStocks() {
+    public List<StockData> getStocks() {
         return tableModel.getStocks();
     }
 
-    public void setStocks(List<StockSettingsState.Stock> stocks) {
+    public void setStocks(List<StockData> stocks) {
         tableModel.setStocks(stocks);
     }
 
     private static class StockTableModel extends javax.swing.table.AbstractTableModel {
         private final String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice"};
-        private List<StockSettingsState.Stock> stocks = new ArrayList<>();
+        private List<StockData> stocks = new ArrayList<>();
 
-        public void addStock(StockSettingsState.Stock stock) {
+        public void addStock(StockData stock) {
             stocks.add(stock);
             int row = stocks.size() - 1;
             fireTableRowsInserted(row, row);
@@ -90,11 +91,11 @@ public class StockSettingsComponent {
             fireTableRowsDeleted(row, row);
         }
 
-        public List<StockSettingsState.Stock> getStocks() {
+        public List<StockData> getStocks() {
             return new ArrayList<>(stocks);
         }
 
-        public void setStocks(List<StockSettingsState.Stock> stocks) {
+        public void setStocks(List<StockData> stocks) {
             this.stocks = new ArrayList<>(stocks);
             fireTableDataChanged();
         }
@@ -126,7 +127,7 @@ public class StockSettingsComponent {
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
-            StockSettingsState.Stock stock = stocks.get(rowIndex);
+            StockData stock = stocks.get(rowIndex);
             switch (columnIndex) {
                 case 0: return stock.getCode();
                 case 1: return stock.getName();
@@ -139,7 +140,7 @@ public class StockSettingsComponent {
 
         @Override
         public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-            StockSettingsState.Stock stock = stocks.get(rowIndex);
+            StockData stock = stocks.get(rowIndex);
             switch (columnIndex) {
                 case 0: stock.setCode((String) aValue); break;
                 case 1: stock.setName((String) aValue); break;

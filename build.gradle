@@ -1,0 +1,44 @@
+plugins {
+    id("java")
+    id("org.jetbrains.intellij") version "1.17.4"
+}
+
+group = "com.hxc"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}
+
+// Configure Java compilation
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+intellij {
+    version = '2024.3'
+    type = 'IC'
+}
+// Configure patch plugin.xml
+patchPluginXml {
+    changeNotes = """
+      Add change notes here.<br>
+      <em>most HTML tags may be used</em>"""
+}
+
+// Configure test
+test {
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
+
+// Configure JavaCompile tasks
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+}

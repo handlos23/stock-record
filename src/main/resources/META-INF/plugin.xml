@@ -1,0 +1,46 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.hxc.stock-record</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>Stock-record</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="hanglos@163.com" url="https://www.baidu.com">huangxc</vendor>
+    <version>1.0.1</version>>
+    <idea-version since-build="212" until-build="243.*"/>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    用于记录<br>
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <application-components>
+        <component>
+            <implementation-class>com.hxc.stockrecord.settings.StockSettingsState</implementation-class>
+        </component>
+    </application-components>
+    <extensions defaultExtensionNs="com.intellij">
+<!--        &lt;!&ndash; 配置服务 &ndash;&gt;-->
+<!--        <applicationService serviceImplementation="com.hxc.stockrecord.settings.StockSettingsState"/>-->
+
+<!--        &lt;!&ndash; 配置设置界面 &ndash;&gt;-->
+<!--        <application-configurable-->
+<!--                parentId="tools"-->
+<!--                instance="com.hxc.stockrecord.settings.StockSettingsConfigurable"-->
+<!--                id="com.hxc.stockrecord.settings.StockSettingsConfigurable"-->
+<!--                displayName="Stock Settings"/>-->
+        <toolWindow id="stockRecord" secondary="true" anchor="right" icon="/META-INF/pluginIcon.svg"
+                    factoryClass="com.hxc.stockrecord.toolwindow.StockToolWindowFactory"/>
+    </extensions>
+</idea-plugin>

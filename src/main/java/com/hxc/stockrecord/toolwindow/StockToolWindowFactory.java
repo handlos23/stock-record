@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -51,6 +52,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
         private final JTable table = new JTable();
         private final DefaultTableModel tableModel;
         private final Project project;
+        private Timer refreshTimer;
 
         public StockToolWindow(Project project) {
             this.project = project;
@@ -125,12 +127,35 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             buttonPanel.add(deleteButton);
 
             panel.add(buttonPanel, BorderLayout.SOUTH);
-            if (tableModel.getRowCount() > 0) {
-                //开启定时任务
-            }
 
             // 初始化数据
             refreshData();
+        }
+
+        private void startRefreshTimer() {
+            if (refreshTimer != null) {
+                refreshTimer.stop();
+            }
+            refreshTimer = new Timer(10000, e -> refreshData());
+            refreshTimer.start();
+        }
+
+        private void stopRefreshTimer() {
+            if (refreshTimer != null) {
+                refreshTimer.stop();
+                refreshTimer = null;
+            }
+        }
+
+        private void checkAndToggleTimer() {
+            StockSettingsState state = StockSettingsState.getInstance();
+            if (state != null && state.stocks != null && !state.stocks.isEmpty()) {
+                if (refreshTimer == null) {
+                    startRefreshTimer();
+                }
+            } else {
+                stopRefreshTimer();
+            }
         }
 
         private void refreshData() {
@@ -163,6 +188,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                     };
                     tableModel.addRow(row);
                 }
+                checkAndToggleTimer();
             });
         }
 

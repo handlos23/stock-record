@@ -59,15 +59,15 @@ public class StockToolWindowFactory implements ToolWindowFactory {
         private final Project project;
         private Timer refreshTimer;
         private final String WECHAT_MP_GET_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential";
-        private final String APPID = "wxddb408c931f6d9d7";
-        private final String SECRET = "f13a873a95a7ea23d04af012adc41d99";
+        private final String APPID = "";
+        private final String SECRET = "";
         private final String WECHAT_MP_SEND_MSG_URL = "https://api.weixin.qq.com/cgi-bin/message/template/send";
-        private final String OPEN_ID = "ozqLT7SF4JeGwat8EHP9sCkLdpAw";
-        private final String TEMPLATE_NUMBER = "dW4Pk3vqcUKdFRkKZzkl3GxHeYHk1XrWG51c1GEdh4c";
+        private final String OPEN_ID = "";
+        private final String TEMPLATE_NUMBER = "";
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice","updateTime", "change", "changePercent","sendMessage"};
+            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice","updateTime", "change", "changePercent","sendMessage","buyPercent","sellPercent"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -198,7 +198,9 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getTime() : stock.getUpdateTime(),
                             stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getChange() : "-",
                             stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getChangePercent() : "-",
-                            stock.isSendMessage()
+                            stock.isSendMessage(),
+                            stock.getBuyPercent() + "%",
+                            stock.getSellPercent() + "%"
                     };
                     tableModel.addRow(row);
                     StockInfo stockInfo = stockMap.get(stock.getCode());
@@ -206,10 +208,16 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         String changePercent = stockInfo.getChangePercent();
                         if (changePercent != null) {
                             BigDecimal changePercentValue = new BigDecimal(changePercent);
-                            if (changePercentValue.compareTo(new BigDecimal("5")) > 0) {
-                                sendWxMessage(stockInfo, "看好的", "卖");
-                            }else if (changePercentValue.compareTo(new BigDecimal("-5")) < 0){
-                                sendWxMessage(stockInfo,"看好的","买");
+                            if (changePercentValue.compareTo(new BigDecimal(stock.getSellPercent())) > 0) {
+                                sendWxMessage(stockInfo, "今天持有的", "卖");
+                            }else if (changePercentValue.compareTo(new BigDecimal(stock.getBuyPercent())) < 0){
+                                sendWxMessage(stockInfo,"今天看好的","买");
+                            }
+                            BigDecimal now = new BigDecimal(stockInfo.getNow());
+                            BigDecimal buyPrice = new BigDecimal(stock.getBuyPrice());
+                            BigDecimal totalPercent = (now.subtract(buyPrice)).multiply(new BigDecimal("100")).divide(buyPrice, 2, RoundingMode.HALF_UP);
+                            if (totalPercent.compareTo(new BigDecimal("5")) > 0) {
+                                sendWxMessage(stockInfo, "一直持有的", "卖");
                             }
                         }
                     }
@@ -233,6 +241,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JTextField buyPriceField = new JTextField();
                 JTextField sellPriceField = new JTextField();
                 JCheckBox sengMessageField = new JCheckBox("是否发送", true);
+                JTextField buyPercentField = new JTextField();
+                JTextField sellPercentField = new JTextField();
 
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
@@ -246,6 +256,10 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(sellPriceField);
                 panel.add(new JLabel("sengMessage:"));
                 panel.add(sengMessageField);
+                panel.add(new JLabel("buyPercent(%):"));
+                panel.add(buyPercentField);
+                panel.add(new JLabel("sellPercent(%):"));
+                panel.add(sellPercentField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -265,6 +279,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         newStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
                         newStock.setUpdateTime(dateFormat.format(new Date()));
                         newStock.setSendMessage(sengMessageField.isSelected());
+                        newStock.setBuyPercent(buyPercentField.getText());
+                        newStock.setSellPercent(sellPercentField.getText());
                         state.stocks.add(newStock);
                         refreshData();
                     } catch (NumberFormatException e) {
@@ -299,6 +315,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JTextField buyPriceField = new JTextField(String.valueOf(selectedStock.getBuyPrice()));
                 JTextField sellPriceField = new JTextField(String.valueOf(selectedStock.getSellPrice()));
                 JCheckBox sengMessageField = new JCheckBox("是否发送", selectedStock.isSendMessage());
+                JTextField buyPercentField = new JTextField(selectedStock.getBuyPercent());
+                JTextField sellPercentField = new JTextField(selectedStock.getSellPercent());
 
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
@@ -312,6 +330,10 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(sellPriceField);
                 panel.add(new JLabel("sengMessage:"));
                 panel.add(sengMessageField);
+                panel.add(new JLabel("buyPercent(%):"));
+                panel.add(buyPercentField);
+                panel.add(new JLabel("sellPercent(%):"));
+                panel.add(sellPercentField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -330,6 +352,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         selectedStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
                         selectedStock.setUpdateTime(dateFormat.format(new Date()));
                         selectedStock.setSendMessage(sengMessageField.isSelected());
+                        selectedStock.setBuyPercent(buyPercentField.getText());
+                        selectedStock.setSellPercent(sellPercentField.getText());
                         refreshData();
                     } catch (NumberFormatException e) {
                         JOptionPane.showMessageDialog(this.panel, "请输入有效的数字！");

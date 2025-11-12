@@ -54,6 +54,8 @@ public class StockSettingsComponent {
         newStock.setSellPrice(0.0);
         newStock.setUpdateTime(dateFormat.format(new Date()));
         newStock.setSendMessage(true);
+        newStock.setBuyPercent("-5");
+        newStock.setSellPercent("5");
         tableModel.addStock(newStock);
     }
 
@@ -140,6 +142,8 @@ public class StockSettingsComponent {
                 case 3: return stock.getBuyPrice();
                 case 4: return stock.getSellPrice();
                 case 10: return stock.isSendMessage();
+                case 11: return stock.getBuyPercent();
+                case 12: return stock.getSellPercent();
                 default: return null;
             }
         }
@@ -153,6 +157,9 @@ public class StockSettingsComponent {
                 case 2: stock.setCurrentPrice((Double) aValue); break;
                 case 3: stock.setBuyPrice((Double) aValue); break;
                 case 4: stock.setSellPrice((Double) aValue); break;
+                case 10: stock.setSendMessage((Boolean) aValue); break;
+                case 11: stock.setBuyPercent((String) aValue); break;
+                case 12: stock.setSellPercent((String) aValue); break;
             }
             fireTableCellUpdated(rowIndex, columnIndex);
         }

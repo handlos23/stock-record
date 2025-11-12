@@ -249,7 +249,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             ApplicationManager.getApplication().invokeLater(() -> {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow == -1) {
-                    JOptionPane.showMessageDialog(panel, "请先选择要修改的股票");
+                    JOptionPane.showMessageDialog(panel, "请先选择要修改的数据");
                     return;
                 }
 
@@ -284,7 +284,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
                         panel,
-                        "修改股票",
+                        "修改",
                         JOptionPane.OK_CANCEL_OPTION,
                         JOptionPane.PLAIN_MESSAGE
                 );
@@ -310,13 +310,13 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             ApplicationManager.getApplication().invokeLater(() -> {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow == -1) {
-                    JOptionPane.showMessageDialog(panel, "请先选择要删除的股票");
+                    JOptionPane.showMessageDialog(panel, "请先选择要删除的数据");
                     return;
                 }
 
                 int confirm = JOptionPane.showConfirmDialog(
                         panel,
-                        "确定要删除选中的股票吗？",
+                        "确定要删除选中的数据吗？",
                         "确认删除",
                         JOptionPane.YES_NO_OPTION
                 );

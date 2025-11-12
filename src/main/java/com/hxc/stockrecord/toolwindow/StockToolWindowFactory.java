@@ -56,7 +56,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice","updateTime"};
+            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice","updateTime", "change", "changePercent"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -184,7 +184,9 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stock.getSellPrice(),
                             stock.getIncreaseRate(),
                             stock.getDifference(),
-                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getTime() : stock.getUpdateTime()
+                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getTime() : stock.getUpdateTime(),
+                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getChange() : "-",
+                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getChangePercent() : "-"
                     };
                     tableModel.addRow(row);
                 }

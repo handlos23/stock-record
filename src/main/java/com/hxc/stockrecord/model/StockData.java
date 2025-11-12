@@ -13,14 +13,18 @@ public class StockData {
     private double buyPrice;
     private double sellPrice;
     private String updateTime;
+    private String change;//涨跌
+    private String changePercent;
 
-    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice, String updateTime) {
+    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice, String updateTime, String change, String changePercent) {
         this.code = code;
         this.name = name;
         this.currentPrice = currentPrice;
         this.buyPrice = buyPrice;
         this.sellPrice = sellPrice;
         this.updateTime = updateTime;
+        this.change = change;
+        this.changePercent = changePercent;
     }
 
     public StockData() {
@@ -30,6 +34,8 @@ public class StockData {
         this.buyPrice = this.buyPrice;
         this.sellPrice = this.sellPrice;
         this.updateTime = this.updateTime;
+        this.change = this.change;
+        this.changePercent = this.changePercent;
     }
 
     public double getIncreaseRate() {
@@ -62,4 +68,12 @@ public class StockData {
     public String getUpdateTime() { return updateTime; }
 
     public void setUpdateTime(String updateTime) { this.updateTime = updateTime; }
+
+    public String getChange() { return change; }
+
+    public void setChange(String change) { this.change = change; }
+
+    public String getChangePercent() { return changePercent; }
+
+    public void setChangePercent(String changePercent) { this.changePercent = changePercent; }
 }

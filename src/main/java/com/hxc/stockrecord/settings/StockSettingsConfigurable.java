@@ -8,6 +8,7 @@ import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,13 +26,25 @@ public class StockSettingsConfigurable implements Configurable {
     public @Nullable JComponent createComponent() {
         settingsComponent = new StockSettingsComponent();
         settings = StockSettingsState.getInstance();
-        return settingsComponent.getPanel();
+
+        // 设置首选大小
+        JComponent component = settingsComponent.getPanel();
+        component.setPreferredSize(new Dimension(600, 400));
+        return component;
     }
 
     @Override
     public boolean isModified() {
         List<StockData> currentStocks = settingsComponent.getStocks();
-        return !currentStocks.equals(settings.stocks);
+        boolean stocksModified = !currentStocks.equals(settings.stocks);
+
+        // 新增微信配置检查
+        boolean wechatModified = !settingsComponent.getAppidText().equals(settings.appid)
+                || !settingsComponent.getSecretText().equals(settings.secret)
+                || !settingsComponent.getOpenIdText().equals(settings.openId)
+                || !settingsComponent.getTemplateNumberText().equals(settings.templateNumber);
+
+        return stocksModified || wechatModified;
     }
 
     @Override
@@ -39,11 +52,22 @@ public class StockSettingsConfigurable implements Configurable {
         List<StockData> newStocks = settingsComponent.getStocks();
         // 确保类型匹配
         settings.stocks = newStocks != null ? new ArrayList<>(newStocks) : new ArrayList<>();
+
+        // 保存微信配置
+        settings.appid = settingsComponent.getAppidText();
+        settings.secret = settingsComponent.getSecretText();
+        settings.openId = settingsComponent.getOpenIdText();
+        settings.templateNumber = settingsComponent.getTemplateNumberText();
     }
 
     @Override
     public void reset() {
         settingsComponent.setStocks(new ArrayList<>(settings.stocks));
+        // 重置微信配置
+        settingsComponent.setAppidText(settings.appid);
+        settingsComponent.setSecretText(settings.secret);
+        settingsComponent.setOpenIdText(settings.openId);
+        settingsComponent.setTemplateNumberText(settings.templateNumber);
     }
 
     @Override

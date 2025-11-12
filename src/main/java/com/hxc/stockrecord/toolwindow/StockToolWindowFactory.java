@@ -59,11 +59,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
         private final Project project;
         private Timer refreshTimer;
         private final String WECHAT_MP_GET_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential";
-        private final String APPID = "";
-        private final String SECRET = "";
         private final String WECHAT_MP_SEND_MSG_URL = "https://api.weixin.qq.com/cgi-bin/message/template/send";
-        private final String OPEN_ID = "";
-        private final String TEMPLATE_NUMBER = "";
 
         public StockToolWindow(Project project) {
             this.project = project;
@@ -390,9 +386,10 @@ public class StockToolWindowFactory implements ToolWindowFactory {
         }
         private void sendWxMessage(StockInfo stockInfo, String sourceType, String operateType) {
             try {
+                StockSettingsState state = StockSettingsState.getInstance();
                 String urlString = WECHAT_MP_SEND_MSG_URL + "?access_token=" + getWxToken();
                 JSONObject body = new JSONObject();
-                body.put("template_id", TEMPLATE_NUMBER);
+                body.put("template_id", state.templateNumber);
                 body.put("url", "www.baidu.com");
                 StringBuffer stringBuffer = new StringBuffer();
                 stringBuffer.append("{\"first\":{\"value\":\"")
@@ -409,7 +406,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         .append("\",\"color\":\"#173177\"}}");
 
                 body.put("data", JSONObject.parse(stringBuffer.toString()));
-                body.put("touser", OPEN_ID);
+                body.put("touser", state.openId);
                 log.info(":::WxSendMsgImpl msgBody:{}", body.toString());
                 String result = HttpUtil.post(urlString, body.toString());
                 log.info(":::WxSendMsgImpl send message result:{}", result);
@@ -434,10 +431,11 @@ public class StockToolWindowFactory implements ToolWindowFactory {
         }
 
         private String getWxToken(){
+            StockSettingsState state = StockSettingsState.getInstance();
             String token = null;
             JSONObject object = new JSONObject();
-            object.put("appid", APPID);
-            object.put("secret", SECRET);
+            object.put("appid", state.appid);
+            object.put("secret", state.secret);
             String invokeUrl =  WECHAT_MP_GET_TOKEN_URL + "&" + StockUtils.getUrlParamByJson(object);
             String result = HttpUtil.get(invokeUrl);
             JSONObject resultObj = JSONObject.parseObject(result);

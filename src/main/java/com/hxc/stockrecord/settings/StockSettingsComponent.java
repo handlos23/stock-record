@@ -11,22 +11,44 @@ import java.util.Date;
 import java.util.List;
 
 public class StockSettingsComponent {
-    private final JPanel mainPanel;
-    private final JTable stockTable;
-    private final StockTableModel tableModel;
+    private JPanel mainPanel;
+    private JTable stockTable;
+    private StockTableModel tableModel;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final JTextField appidField = new JTextField();
+    private final JTextField secretField = new JTextField();
+    private final JTextField openIdField = new JTextField();
+    private final JTextField templateNumberField = new JTextField();
 
     public StockSettingsComponent() {
+        // 创建主面板，使用垂直布局
+        mainPanel = new JPanel(new BorderLayout(0, 5));
+
+        // 创建股票配置面板
+        JPanel stockPanel = createStockPanel();
+
+        // 创建微信配置面板
+        JPanel wechatPanel = createWechatPanel();
+
+        // 使用选项卡布局来组织配置
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.addTab("股票配置", stockPanel);
+        tabbedPane.addTab("微信配置", wechatPanel);
+
+        mainPanel.add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    private JPanel createStockPanel() {
+        // 原有的股票配置代码
         tableModel = new StockTableModel();
         stockTable = new JTable(tableModel);
 
-        // 设置表格属性
-        stockTable.setRowHeight(JBUI.scale(24));
+        stockTable.setRowHeight(24); // 减小行高
         stockTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         stockTable.setAutoCreateRowSorter(true);
 
         // 创建按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         JButton addButton = new JButton("添加");
         JButton removeButton = new JButton("删除");
 
@@ -36,14 +58,146 @@ public class StockSettingsComponent {
         buttonPanel.add(addButton);
         buttonPanel.add(removeButton);
 
-        // 创建主面板
-        JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.add(new JScrollPane(stockTable), BorderLayout.CENTER);
-        tablePanel.add(buttonPanel, BorderLayout.SOUTH);
+        // 创建股票配置面板
+        JPanel panel = new JPanel(new BorderLayout(0, 5));
+        panel.add(new JScrollPane(stockTable), BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(tablePanel, BorderLayout.CENTER);
+        // 添加边距
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        wrapper.add(panel, BorderLayout.CENTER);
+        return wrapper;
     }
+
+    private JPanel createWechatPanel() {
+        // 创建微信配置面板
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // 添加微信配置字段
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(new JLabel("微信AppID:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 1.0;
+        panel.add(appidField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0.0;
+        panel.add(new JLabel("微信Secret:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        panel.add(secretField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.weightx = 0.0;
+        panel.add(new JLabel("微信OpenID:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        panel.add(openIdField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.weightx = 0.0;
+        panel.add(new JLabel("消息模板编号:"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.weightx = 1.0;
+        panel.add(templateNumberField, gbc);
+
+        // 添加边距
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        wrapper.add(panel, BorderLayout.NORTH);
+        return wrapper;
+    }
+//    public StockSettingsComponent() {
+//        tableModel = new StockTableModel();
+//        stockTable = new JTable(tableModel);
+//
+//        // 设置表格属性
+//        stockTable.setRowHeight(JBUI.scale(24));
+//        stockTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+//        stockTable.setAutoCreateRowSorter(true);
+//
+//        // 创建按钮面板
+//        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//        JButton addButton = new JButton("添加");
+//        JButton removeButton = new JButton("删除");
+//
+//        addButton.addActionListener(e -> addStock());
+//        removeButton.addActionListener(e -> removeStock());
+//
+//        buttonPanel.add(addButton);
+//        buttonPanel.add(removeButton);
+//
+//// 创建微信配置面板
+//        JPanel wechatPanel = new JPanel(new GridBagLayout());
+//        GridBagConstraints gbc = new GridBagConstraints();
+//        gbc.insets = new Insets(5, 5, 5, 5);
+//        gbc.anchor = GridBagConstraints.WEST;
+//        gbc.fill = GridBagConstraints.HORIZONTAL;
+//
+//        // 添加微信配置字段
+//        gbc.gridx = 0;
+//        gbc.gridy = 0;
+//        wechatPanel.add(new JLabel("微信AppID:"), gbc);
+//
+//        gbc.gridx = 1;
+//        gbc.weightx = 1.0;
+//        wechatPanel.add(appidField, gbc);
+//
+//        gbc.gridx = 0;
+//        gbc.gridy = 1;
+//        gbc.weightx = 0.0;
+//        wechatPanel.add(new JLabel("微信Secret:"), gbc);
+//
+//        gbc.gridx = 1;
+//        gbc.gridy = 1;
+//        gbc.weightx = 1.0;
+//        wechatPanel.add(secretField, gbc);
+//
+//        gbc.gridx = 0;
+//        gbc.gridy = 2;
+//        gbc.weightx = 0.0;
+//        wechatPanel.add(new JLabel("微信OpenID:"), gbc);
+//
+//        gbc.gridx = 1;
+//        gbc.gridy = 2;
+//        gbc.weightx = 1.0;
+//        wechatPanel.add(openIdField, gbc);
+//
+//        gbc.gridx = 0;
+//        gbc.gridy = 3;
+//        gbc.weightx = 0.0;
+//        wechatPanel.add(new JLabel("消息模板编号:"), gbc);
+//
+//        gbc.gridx = 1;
+//        gbc.gridy = 3;
+//        gbc.weightx = 1.0;
+//        wechatPanel.add(templateNumberField, gbc);
+//
+//        // 创建主面板
+//        JPanel tablePanel = new JPanel(new BorderLayout());
+//        tablePanel.add(new JScrollPane(stockTable), BorderLayout.CENTER);
+//        tablePanel.add(buttonPanel, BorderLayout.SOUTH);
+//
+//        mainPanel = new JPanel(new BorderLayout());
+//        mainPanel.add(tablePanel, BorderLayout.CENTER);
+//        mainPanel.add(wechatPanel, BorderLayout.SOUTH);
+//    }
 
     private void addStock() {
         StockData newStock = new StockData();
@@ -66,6 +220,40 @@ public class StockSettingsComponent {
             tableModel.removeStock(modelRow);
         }
     }
+
+    // 添加微信配置的getter和setter方法
+    public String getAppidText() {
+        return appidField.getText();
+    }
+
+    public void setAppidText(String text) {
+        appidField.setText(text);
+    }
+
+    public String getSecretText() {
+        return secretField.getText();
+    }
+
+    public void setSecretText(String text) {
+        secretField.setText(text);
+    }
+
+    public String getOpenIdText() {
+        return openIdField.getText();
+    }
+
+    public void setOpenIdText(String text) {
+        openIdField.setText(text);
+    }
+
+    public String getTemplateNumberText() {
+        return templateNumberField.getText();
+    }
+
+    public void setTemplateNumberText(String text) {
+        templateNumberField.setText(text);
+    }
+
 
     public JPanel getPanel() {
         return mainPanel;

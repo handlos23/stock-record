@@ -42,5 +42,8 @@
 <!--                displayName="Stock Settings"/>-->
         <toolWindow id="stockRecord" secondary="true" anchor="right" icon="/META-INF/pluginIcon.svg"
                     factoryClass="com.hxc.stockrecord.toolwindow.StockToolWindowFactory"/>
+        <applicationConfigurable parentId="tools" instance="com.hxc.stockrecord.settings.StockSettingsConfigurable"
+                                 id="com.hxc.stockrecord.settings.StockSettingsConfigurable"
+                                 displayName="Stock Settings"/>
     </extensions>
 </idea-plugin>

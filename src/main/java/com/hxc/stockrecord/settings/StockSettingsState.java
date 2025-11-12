@@ -21,6 +21,11 @@ import java.util.List;
 public final class StockSettingsState implements PersistentStateComponent<StockSettingsState> {
     public List<StockData> stocks = new ArrayList<>();
 
+    // 新增微信配置字段
+    public String appid;
+    public String secret;
+    public String openId;
+    public String templateNumber;
 
     @Nullable
     @Override

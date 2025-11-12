@@ -1,10 +1,15 @@
 package com.hxc.stockrecord.toolwindow;
 
+import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Joiner;
 import com.hxc.stockrecord.entity.StockInfo;
 import com.hxc.stockrecord.model.StockData;
 import com.hxc.stockrecord.settings.StockSettingsState;
 import com.hxc.stockrecord.utils.HttpClientPool;
+import com.hxc.stockrecord.utils.StockUtils;
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
@@ -53,10 +58,16 @@ public class StockToolWindowFactory implements ToolWindowFactory {
         private final DefaultTableModel tableModel;
         private final Project project;
         private Timer refreshTimer;
+        private final String WECHAT_MP_GET_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential";
+        private final String APPID = "wxddb408c931f6d9d7";
+        private final String SECRET = "f13a873a95a7ea23d04af012adc41d99";
+        private final String WECHAT_MP_SEND_MSG_URL = "https://api.weixin.qq.com/cgi-bin/message/template/send";
+        private final String OPEN_ID = "ozqLT7SF4JeGwat8EHP9sCkLdpAw";
+        private final String TEMPLATE_NUMBER = "dW4Pk3vqcUKdFRkKZzkl3GxHeYHk1XrWG51c1GEdh4c";
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice","updateTime", "change", "changePercent"};
+            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice","updateTime", "change", "changePercent","sendMessage"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -186,9 +197,22 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stock.getDifference(),
                             stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getTime() : stock.getUpdateTime(),
                             stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getChange() : "-",
-                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getChangePercent() : "-"
+                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getChangePercent() : "-",
+                            stock.isSendMessage()
                     };
                     tableModel.addRow(row);
+                    StockInfo stockInfo = stockMap.get(stock.getCode());
+                    if (stock.isSendMessage() && stockInfo != null) {
+                        String changePercent = stockInfo.getChangePercent();
+                        if (changePercent != null) {
+                            BigDecimal changePercentValue = new BigDecimal(changePercent);
+                            if (changePercentValue.compareTo(new BigDecimal("5")) > 0) {
+                                sendWxMessage(stockInfo, "看好的", "卖");
+                            }else if (changePercentValue.compareTo(new BigDecimal("-5")) < 0){
+                                sendWxMessage(stockInfo,"看好的","买");
+                            }
+                        }
+                    }
                 }
                 checkAndToggleTimer();
             });
@@ -208,6 +232,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JTextField priceField = new JTextField();
                 JTextField buyPriceField = new JTextField();
                 JTextField sellPriceField = new JTextField();
+                JCheckBox sengMessageField = new JCheckBox("是否发送", true);
 
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
@@ -219,6 +244,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(buyPriceField);
                 panel.add(new JLabel("sellPrice:"));
                 panel.add(sellPriceField);
+                panel.add(new JLabel("sengMessage:"));
+                panel.add(sengMessageField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -237,7 +264,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         newStock.setBuyPrice(Double.parseDouble(buyPriceField.getText()));
                         newStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
                         newStock.setUpdateTime(dateFormat.format(new Date()));
-
+                        newStock.setSendMessage(sengMessageField.isSelected());
                         state.stocks.add(newStock);
                         refreshData();
                     } catch (NumberFormatException e) {
@@ -271,6 +298,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JTextField priceField = new JTextField(String.valueOf(selectedStock.getCurrentPrice()));
                 JTextField buyPriceField = new JTextField(String.valueOf(selectedStock.getBuyPrice()));
                 JTextField sellPriceField = new JTextField(String.valueOf(selectedStock.getSellPrice()));
+                JCheckBox sengMessageField = new JCheckBox("是否发送", selectedStock.isSendMessage());
 
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
@@ -282,6 +310,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(buyPriceField);
                 panel.add(new JLabel("sellPrice:"));
                 panel.add(sellPriceField);
+                panel.add(new JLabel("sengMessage:"));
+                panel.add(sengMessageField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -299,7 +329,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         selectedStock.setBuyPrice(Double.parseDouble(buyPriceField.getText()));
                         selectedStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
                         selectedStock.setUpdateTime(dateFormat.format(new Date()));
-
+                        selectedStock.setSendMessage(sengMessageField.isSelected());
                         refreshData();
                     } catch (NumberFormatException e) {
                         JOptionPane.showMessageDialog(this.panel, "请输入有效的数字！");
@@ -333,6 +363,66 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                     }
                 }
             });
+        }
+        private void sendWxMessage(StockInfo stockInfo, String sourceType, String operateType) {
+            try {
+                String urlString = WECHAT_MP_SEND_MSG_URL + "?access_token=" + getWxToken();
+                JSONObject body = new JSONObject();
+                body.put("template_id", TEMPLATE_NUMBER);
+                body.put("url", "www.baidu.com");
+                StringBuffer stringBuffer = new StringBuffer();
+                stringBuffer.append("{\"first\":{\"value\":\"")
+                        .append(sourceType +"股票：" + stockInfo.getCode()+ "_" + stockInfo.getName())
+                        .append("\",\"color\":\"#FF0000\"},")
+                        .append("\"keyword1\":{\"value\":\"")
+                        .append(stockInfo.getNow())
+                        .append("\",\"color\":\"#FF0000\"},")
+                        .append("\"keyword2\":{\"value\":\"")
+                        .append("涨跌为"+ stockInfo.getChange() + "，涨跌幅度为：" + stockInfo.getChangePercent() + "%")
+                        .append("\",\"color\":\"#173177\"},")
+                        .append("\"remark\":{\"value\":\"")
+                        .append(operateType)
+                        .append("\",\"color\":\"#173177\"}}");
+
+                body.put("data", JSONObject.parse(stringBuffer.toString()));
+                body.put("touser", OPEN_ID);
+                log.info(":::WxSendMsgImpl msgBody:{}", body.toString());
+                String result = HttpUtil.post(urlString, body.toString());
+                log.info(":::WxSendMsgImpl send message result:{}", result);
+
+                try {
+                    JSONObject jsonObject = JSON.parseObject(result);
+                    if (jsonObject.containsKey("errmsg")) {
+                        String errmsg = jsonObject.getString("errmsg");
+                        if (CharSequenceUtil.isNotEmpty(errmsg) && errmsg.contains("invalid credential")) {
+                            urlString = WECHAT_MP_SEND_MSG_URL + "?access_token=" + getWxToken();
+                            result = HttpUtil.post(urlString, body.toString());
+                            log.info("发送消息结果：{}", result);
+
+                        }
+                    }
+                }catch (Exception e){
+                }
+
+            } catch (Exception e) {
+                log.error("WxSendMsgImpl.doSendMsg 微信发送消息异常:", e.getMessage());
+            }
+        }
+
+        private String getWxToken(){
+            String token = null;
+            JSONObject object = new JSONObject();
+            object.put("appid", APPID);
+            object.put("secret", SECRET);
+            String invokeUrl =  WECHAT_MP_GET_TOKEN_URL + "&" + StockUtils.getUrlParamByJson(object);
+            String result = HttpUtil.get(invokeUrl);
+            JSONObject resultObj = JSONObject.parseObject(result);
+            if (resultObj.containsKey("access_token")) {
+                token = resultObj.getString("access_token");
+            } else {
+                return resultObj.getString("errmsg");
+            }
+            return token;
         }
 
         public JComponent getContent() {

@@ -53,6 +53,7 @@ public class StockSettingsComponent {
         newStock.setBuyPrice(0.0);
         newStock.setSellPrice(0.0);
         newStock.setUpdateTime(dateFormat.format(new Date()));
+        newStock.setSendMessage(true);
         tableModel.addStock(newStock);
     }
 
@@ -138,6 +139,7 @@ public class StockSettingsComponent {
                 case 2: return stock.getCurrentPrice();
                 case 3: return stock.getBuyPrice();
                 case 4: return stock.getSellPrice();
+                case 10: return stock.isSendMessage();
                 default: return null;
             }
         }

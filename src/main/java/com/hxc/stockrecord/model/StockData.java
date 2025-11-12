@@ -12,13 +12,15 @@ public class StockData {
     private double currentPrice;
     private double buyPrice;
     private double sellPrice;
+    private String updateTime;
 
-    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice) {
+    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice, String updateTime) {
         this.code = code;
         this.name = name;
         this.currentPrice = currentPrice;
         this.buyPrice = buyPrice;
         this.sellPrice = sellPrice;
+        this.updateTime = updateTime;
     }
 
     public StockData() {
@@ -27,6 +29,7 @@ public class StockData {
         this.currentPrice = this.currentPrice;
         this.buyPrice = this.buyPrice;
         this.sellPrice = this.sellPrice;
+        this.updateTime = this.updateTime;
     }
 
     public double getIncreaseRate() {
@@ -55,4 +58,8 @@ public class StockData {
 
     public double getSellPrice() { return sellPrice; }
     public void setSellPrice(double sellPrice) { this.sellPrice = sellPrice; }
+
+    public String getUpdateTime() { return updateTime; }
+
+    public void setUpdateTime(String updateTime) { this.updateTime = updateTime; }
 }

@@ -5,13 +5,16 @@ import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class StockSettingsComponent {
     private final JPanel mainPanel;
     private final JTable stockTable;
     private final StockTableModel tableModel;
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public StockSettingsComponent() {
         tableModel = new StockTableModel();
@@ -49,6 +52,7 @@ public class StockSettingsComponent {
         newStock.setCurrentPrice(0.0);
         newStock.setBuyPrice(0.0);
         newStock.setSellPrice(0.0);
+        newStock.setUpdateTime(dateFormat.format(new Date()));
         tableModel.addStock(newStock);
     }
 

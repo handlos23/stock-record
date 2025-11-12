@@ -24,10 +24,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -36,6 +36,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
     private static final Pattern DEFAULT_STOCK_PATTERN = Pattern.compile("var hq_str_(\\w+?)=\"(.*?)\";");
     private static final Logger log = LoggerFactory.getLogger(StockToolWindowFactory.class);
     public static final String NAME = "Stock";
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
@@ -53,7 +54,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice"};
+            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice","updateTime"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -144,20 +145,21 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 }
                 List<String> codeList = state.stocks.stream().map(stock -> stock.getCode()).toList();
 
-                Map<String, String> stockMap = new HashMap<>();
+                Map<String, StockInfo> stockMap = new HashMap<>();
                 if (CollectionUtils.isNotEmpty(codeList)) {
-                    stockMap = pollStock(codeList).stream().collect(Collectors.toMap(StockInfo::getCode, StockInfo::getNow));
+                    stockMap = pollStock(codeList).stream().collect(Collectors.toMap(StockInfo::getCode, Function.identity()));
                 }
                 tableModel.setRowCount(0);
                 for (StockData stock : state.stocks) {
                     Object[] row = {
                             stock.getCode(),
                             stock.getName(),
-                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()) : stock.getCurrentPrice(),
+                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getNow() : stock.getCurrentPrice(),
                             stock.getBuyPrice(),
                             stock.getSellPrice(),
                             stock.getIncreaseRate(),
-                            stock.getDifference()
+                            stock.getDifference(),
+                            stockMap.containsKey(stock.getCode()) ? stockMap.get(stock.getCode()).getTime() : stock.getUpdateTime()
                     };
                     tableModel.addRow(row);
                 }
@@ -206,6 +208,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         newStock.setCurrentPrice(Double.parseDouble(priceField.getText()));
                         newStock.setBuyPrice(Double.parseDouble(buyPriceField.getText()));
                         newStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
+                        newStock.setUpdateTime(dateFormat.format(new Date()));
 
                         state.stocks.add(newStock);
                         refreshData();
@@ -267,6 +270,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         selectedStock.setCurrentPrice(Double.parseDouble(priceField.getText()));
                         selectedStock.setBuyPrice(Double.parseDouble(buyPriceField.getText()));
                         selectedStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
+                        selectedStock.setUpdateTime(dateFormat.format(new Date()));
 
                         refreshData();
                     } catch (NumberFormatException e) {

@@ -31,13 +31,11 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
 public class StockToolWindowFactory implements ToolWindowFactory {
     private static final String URL = "http://qt.gtimg.cn/q=";
     private static final Pattern DEFAULT_STOCK_PATTERN = Pattern.compile("var hq_str_(\\w+?)=\"(.*?)\";");
     private static final Logger log = LoggerFactory.getLogger(StockToolWindowFactory.class);
     public static final String NAME = "Stock";
-
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
@@ -115,6 +113,11 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             addButton.addActionListener(e -> addStock());
             buttonPanel.add(addButton);
 
+            // 添加修改按钮
+            JButton editButton = new JButton("修改");
+            editButton.addActionListener(e -> editStock());
+            buttonPanel.add(editButton);
+
             // 添加删除按钮
             JButton deleteButton = new JButton("删除");
             deleteButton.addActionListener(e -> deleteStock());
@@ -123,7 +126,6 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             panel.add(buttonPanel, BorderLayout.SOUTH);
             if (tableModel.getRowCount() > 0) {
                 //开启定时任务
-
             }
 
             // 初始化数据
@@ -206,6 +208,66 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         newStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
 
                         state.stocks.add(newStock);
+                        refreshData();
+                    } catch (NumberFormatException e) {
+                        JOptionPane.showMessageDialog(this.panel, "请输入有效的数字！");
+                    }
+                }
+            });
+        }
+
+        private void editStock() {
+            ApplicationManager.getApplication().invokeLater(() -> {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow == -1) {
+                    JOptionPane.showMessageDialog(panel, "请先选择要修改的股票");
+                    return;
+                }
+
+                StockSettingsState state = StockSettingsState.getInstance();
+                if (state == null || state.stocks == null) {
+                    return;
+                }
+
+                // 转换为模型行索引
+                int modelRow = table.convertRowIndexToModel(selectedRow);
+                StockData selectedStock = state.stocks.get(modelRow);
+
+                // 创建一个对话框来修改股票信息
+                JPanel panel = new JPanel(new GridLayout(0, 2));
+                JTextField codeField = new JTextField(selectedStock.getCode());
+                JTextField nameField = new JTextField(selectedStock.getName());
+                JTextField priceField = new JTextField(String.valueOf(selectedStock.getCurrentPrice()));
+                JTextField buyPriceField = new JTextField(String.valueOf(selectedStock.getBuyPrice()));
+                JTextField sellPriceField = new JTextField(String.valueOf(selectedStock.getSellPrice()));
+
+                panel.add(new JLabel("code:"));
+                panel.add(codeField);
+                panel.add(new JLabel("name:"));
+                panel.add(nameField);
+                panel.add(new JLabel("currencyPrice:"));
+                panel.add(priceField);
+                panel.add(new JLabel("buyPrice:"));
+                panel.add(buyPriceField);
+                panel.add(new JLabel("sellPrice:"));
+                panel.add(sellPriceField);
+
+                int result = JOptionPane.showConfirmDialog(
+                        this.panel,
+                        panel,
+                        "修改股票",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE
+                );
+
+                if (result == JOptionPane.OK_OPTION) {
+                    try {
+                        selectedStock.setCode(codeField.getText());
+                        selectedStock.setName(nameField.getText());
+                        selectedStock.setCurrentPrice(Double.parseDouble(priceField.getText()));
+                        selectedStock.setBuyPrice(Double.parseDouble(buyPriceField.getText()));
+                        selectedStock.setSellPrice(Double.parseDouble(sellPriceField.getText()));
+
                         refreshData();
                     } catch (NumberFormatException e) {
                         JOptionPane.showMessageDialog(this.panel, "请输入有效的数字！");
@@ -311,13 +373,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 }
             }
             stockInfoList.add(bean);
-
         }
-
         return stockInfoList;
     }
-
-
-
-
 }

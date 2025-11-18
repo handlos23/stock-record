@@ -21,11 +21,14 @@ import java.util.List;
 public final class StockSettingsState implements PersistentStateComponent<StockSettingsState> {
     public List<StockData> stocks = new ArrayList<>();
 
-    // 新增微信配置字段
-    public String appid;
-    public String secret;
-    public String openId;
-    public String templateNumber;
+    // 微信配置字段
+    private String appid;
+    private String secret;
+    private String openId;
+    public String templateNumber;  // 保持手动配置
+
+    // 微信绑定状态
+    private boolean isWechatBound = false;
 
     @Nullable
     @Override
@@ -40,5 +43,37 @@ public final class StockSettingsState implements PersistentStateComponent<StockS
 
     public static StockSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(StockSettingsState.class);
+    }
+
+    // 微信绑定相关方法
+    public void bindWechat(String appid, String secret, String openId) {
+        this.appid = appid;
+        this.secret = secret;
+        this.openId = openId;
+        this.isWechatBound = true;
+    }
+
+    public void unbindWechat() {
+        this.appid = null;
+        this.secret = null;
+        this.openId = null;
+        this.isWechatBound = false;
+    }
+
+    public boolean isWechatBound() {
+        return isWechatBound;
+    }
+
+    // Getter 方法
+    public String getAppid() {
+        return appid;
+    }
+
+    public String getSecret() {
+        return secret;
+    }
+
+    public String getOpenId() {
+        return openId;
     }
 }

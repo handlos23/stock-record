@@ -406,7 +406,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         .append("\",\"color\":\"#173177\"}}");
 
                 body.put("data", JSONObject.parse(stringBuffer.toString()));
-                body.put("touser", state.openId);
+                body.put("touser", state.getOpenId());
                 log.info(":::WxSendMsgImpl msgBody:{}", body.toString());
                 String result = HttpUtil.post(urlString, body.toString());
                 log.info(":::WxSendMsgImpl send message result:{}", result);
@@ -434,8 +434,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             StockSettingsState state = StockSettingsState.getInstance();
             String token = null;
             JSONObject object = new JSONObject();
-            object.put("appid", state.appid);
-            object.put("secret", state.secret);
+            object.put("appid", state.getAppid());
+            object.put("secret", state.getSecret());
             String invokeUrl =  WECHAT_MP_GET_TOKEN_URL + "&" + StockUtils.getUrlParamByJson(object);
             String result = HttpUtil.get(invokeUrl);
             JSONObject resultObj = JSONObject.parseObject(result);

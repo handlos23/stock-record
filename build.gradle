@@ -23,6 +23,8 @@ dependencies {
     implementation("cn.hutool:hutool-all:5.8.11")
     implementation("org.freemarker:freemarker:2.3.31")
     implementation("org.projectlombok:lombok:1.18.24")
+    implementation("com.google.zxing:core:3.4.1")
+    implementation("org.json:json:20210307")
 }
 
 // Configure Java compilation

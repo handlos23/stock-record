@@ -19,31 +19,29 @@
     用于记录<br>
   ]]></description>
 
-    <!-- Product and plugin compatibility requirements.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
 
-    <!-- Extension points defined by the plugin.
-         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <application-components>
         <component>
             <implementation-class>com.hxc.stockrecord.settings.StockSettingsState</implementation-class>
         </component>
     </application-components>
     <extensions defaultExtensionNs="com.intellij">
-<!--        &lt;!&ndash; 配置服务 &ndash;&gt;-->
-<!--        <applicationService serviceImplementation="com.hxc.stockrecord.settings.StockSettingsState"/>-->
-
-<!--        &lt;!&ndash; 配置设置界面 &ndash;&gt;-->
-<!--        <application-configurable-->
-<!--                parentId="tools"-->
-<!--                instance="com.hxc.stockrecord.settings.StockSettingsConfigurable"-->
-<!--                id="com.hxc.stockrecord.settings.StockSettingsConfigurable"-->
-<!--                displayName="Stock Settings"/>-->
         <toolWindow id="stockRecord" secondary="true" anchor="right" icon="/META-INF/pluginIcon.svg"
                     factoryClass="com.hxc.stockrecord.toolwindow.StockToolWindowFactory"/>
         <applicationConfigurable parentId="tools" instance="com.hxc.stockrecord.settings.StockSettingsConfigurable"
                                  id="com.hxc.stockrecord.settings.StockSettingsConfigurable"
                                  displayName="Stock Settings"/>
+        <!-- 添加服务 -->
+        <applicationService serviceImplementation="com.hxc.stockrecord.service.WechatBindingService"/>
+
     </extensions>
+
+    <!-- 添加权限声明 -->
+    <application-components>
+        <component>
+            <implementation-class>com.hxc.stockrecord.service.WechatBindingService</implementation-class>
+        </component>
+    </application-components>
+
 </idea-plugin>

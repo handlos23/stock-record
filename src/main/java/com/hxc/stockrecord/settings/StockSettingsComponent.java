@@ -1,6 +1,8 @@
 package com.hxc.stockrecord.settings;
 
 import com.hxc.stockrecord.model.StockData;
+import com.hxc.stockrecord.service.WechatBindingService;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.util.ui.JBUI;
 
 import javax.swing.*;
@@ -39,7 +41,6 @@ public class StockSettingsComponent {
     }
 
     private JPanel createStockPanel() {
-        // 原有的股票配置代码
         tableModel = new StockTableModel();
         stockTable = new JTable(tableModel);
 
@@ -85,6 +86,7 @@ public class StockSettingsComponent {
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
+//        appidField.setEditable(false); // 设置为只读，通过扫码绑定获取
         panel.add(appidField, gbc);
 
         gbc.gridx = 0;
@@ -95,6 +97,7 @@ public class StockSettingsComponent {
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1.0;
+//        secretField.setEditable(false); // 设置为只读，通过扫码绑定获取
         panel.add(secretField, gbc);
 
         gbc.gridx = 0;
@@ -105,6 +108,7 @@ public class StockSettingsComponent {
         gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.weightx = 1.0;
+//        openIdField.setEditable(false); // 设置为只读，通过扫码绑定获取
         panel.add(openIdField, gbc);
 
         gbc.gridx = 0;
@@ -117,87 +121,40 @@ public class StockSettingsComponent {
         gbc.weightx = 1.0;
         panel.add(templateNumberField, gbc);
 
+        // 添加按钮面板
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton bindButton = new JButton("扫码绑定");
+        JButton unbindButton = new JButton("解除绑定");
+
+        bindButton.addActionListener(e -> {
+            // 调用微信绑定服务
+            WechatBindingService.getInstance().showBindingDialog();
+        });
+
+        unbindButton.addActionListener(e -> {
+            // 解除绑定
+            WechatBindingService.getInstance().unbind();
+            // 清空显示
+            appidField.setText("");
+            secretField.setText("");
+            openIdField.setText("");
+        });
+
+        buttonPanel.add(bindButton);
+        buttonPanel.add(unbindButton);
+
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        panel.add(buttonPanel, gbc);
+
         // 添加边距
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         wrapper.add(panel, BorderLayout.NORTH);
         return wrapper;
     }
-//    public StockSettingsComponent() {
-//        tableModel = new StockTableModel();
-//        stockTable = new JTable(tableModel);
-//
-//        // 设置表格属性
-//        stockTable.setRowHeight(JBUI.scale(24));
-//        stockTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-//        stockTable.setAutoCreateRowSorter(true);
-//
-//        // 创建按钮面板
-//        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-//        JButton addButton = new JButton("添加");
-//        JButton removeButton = new JButton("删除");
-//
-//        addButton.addActionListener(e -> addStock());
-//        removeButton.addActionListener(e -> removeStock());
-//
-//        buttonPanel.add(addButton);
-//        buttonPanel.add(removeButton);
-//
-//// 创建微信配置面板
-//        JPanel wechatPanel = new JPanel(new GridBagLayout());
-//        GridBagConstraints gbc = new GridBagConstraints();
-//        gbc.insets = new Insets(5, 5, 5, 5);
-//        gbc.anchor = GridBagConstraints.WEST;
-//        gbc.fill = GridBagConstraints.HORIZONTAL;
-//
-//        // 添加微信配置字段
-//        gbc.gridx = 0;
-//        gbc.gridy = 0;
-//        wechatPanel.add(new JLabel("微信AppID:"), gbc);
-//
-//        gbc.gridx = 1;
-//        gbc.weightx = 1.0;
-//        wechatPanel.add(appidField, gbc);
-//
-//        gbc.gridx = 0;
-//        gbc.gridy = 1;
-//        gbc.weightx = 0.0;
-//        wechatPanel.add(new JLabel("微信Secret:"), gbc);
-//
-//        gbc.gridx = 1;
-//        gbc.gridy = 1;
-//        gbc.weightx = 1.0;
-//        wechatPanel.add(secretField, gbc);
-//
-//        gbc.gridx = 0;
-//        gbc.gridy = 2;
-//        gbc.weightx = 0.0;
-//        wechatPanel.add(new JLabel("微信OpenID:"), gbc);
-//
-//        gbc.gridx = 1;
-//        gbc.gridy = 2;
-//        gbc.weightx = 1.0;
-//        wechatPanel.add(openIdField, gbc);
-//
-//        gbc.gridx = 0;
-//        gbc.gridy = 3;
-//        gbc.weightx = 0.0;
-//        wechatPanel.add(new JLabel("消息模板编号:"), gbc);
-//
-//        gbc.gridx = 1;
-//        gbc.gridy = 3;
-//        gbc.weightx = 1.0;
-//        wechatPanel.add(templateNumberField, gbc);
-//
-//        // 创建主面板
-//        JPanel tablePanel = new JPanel(new BorderLayout());
-//        tablePanel.add(new JScrollPane(stockTable), BorderLayout.CENTER);
-//        tablePanel.add(buttonPanel, BorderLayout.SOUTH);
-//
-//        mainPanel = new JPanel(new BorderLayout());
-//        mainPanel.add(tablePanel, BorderLayout.CENTER);
-//        mainPanel.add(wechatPanel, BorderLayout.SOUTH);
-//    }
 
     private void addStock() {
         StockData newStock = new StockData();
@@ -227,7 +184,7 @@ public class StockSettingsComponent {
     }
 
     public void setAppidText(String text) {
-        appidField.setText(text);
+        ApplicationManager.getApplication().invokeLater(() -> appidField.setText(text));
     }
 
     public String getSecretText() {
@@ -235,7 +192,7 @@ public class StockSettingsComponent {
     }
 
     public void setSecretText(String text) {
-        secretField.setText(text);
+        ApplicationManager.getApplication().invokeLater(() -> secretField.setText(text));
     }
 
     public String getOpenIdText() {
@@ -243,7 +200,7 @@ public class StockSettingsComponent {
     }
 
     public void setOpenIdText(String text) {
-        openIdField.setText(text);
+        ApplicationManager.getApplication().invokeLater(() -> openIdField.setText(text));
     }
 
     public String getTemplateNumberText() {
@@ -254,6 +211,14 @@ public class StockSettingsComponent {
         templateNumberField.setText(text);
     }
 
+    // 更新微信配置信息
+    public void updateWechatConfig(String appid, String secret, String openId) {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            appidField.setText(appid);
+            secretField.setText(secret);
+            openIdField.setText(openId);
+        });
+    }
 
     public JPanel getPanel() {
         return mainPanel;

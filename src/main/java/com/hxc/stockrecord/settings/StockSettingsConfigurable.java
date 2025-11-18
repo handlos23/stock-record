@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class StockSettingsConfigurable implements Configurable {
     private StockSettingsComponent settingsComponent;
@@ -29,45 +30,89 @@ public class StockSettingsConfigurable implements Configurable {
 
         // 设置首选大小
         JComponent component = settingsComponent.getPanel();
-        component.setPreferredSize(new Dimension(600, 400));
+        component.setPreferredSize(new Dimension(800, 500));
         return component;
     }
 
     @Override
     public boolean isModified() {
-        List<StockData> currentStocks = settingsComponent.getStocks();
-        boolean stocksModified = !currentStocks.equals(settings.stocks);
+        if (settingsComponent == null || settings == null) {
+            return false;
+        }
 
-        // 新增微信配置检查
-        boolean wechatModified = !settingsComponent.getAppidText().equals(settings.appid)
-                || !settingsComponent.getSecretText().equals(settings.secret)
-                || !settingsComponent.getOpenIdText().equals(settings.openId)
-                || !settingsComponent.getTemplateNumberText().equals(settings.templateNumber);
+        List<StockData> currentStocks = settingsComponent.getStocks();
+        boolean stocksModified = !Objects.equals(currentStocks, settings.stocks);
+
+        // 使用getter方法获取微信配置
+        boolean wechatModified = !Objects.equals(settingsComponent.getAppidText(), settings.getAppid())
+                || !Objects.equals(settingsComponent.getSecretText(), settings.getSecret())
+                || !Objects.equals(settingsComponent.getOpenIdText(), settings.getOpenId())
+                || !Objects.equals(settingsComponent.getTemplateNumberText(), settings.templateNumber);
 
         return stocksModified || wechatModified;
     }
 
     @Override
     public void apply() throws ConfigurationException {
-        List<StockData> newStocks = settingsComponent.getStocks();
-        // 确保类型匹配
-        settings.stocks = newStocks != null ? new ArrayList<>(newStocks) : new ArrayList<>();
+        if (settingsComponent == null || settings == null) {
+            throw new ConfigurationException("Configuration not initialized");
+        }
 
-        // 保存微信配置
-        settings.appid = settingsComponent.getAppidText();
-        settings.secret = settingsComponent.getSecretText();
-        settings.openId = settingsComponent.getOpenIdText();
-        settings.templateNumber = settingsComponent.getTemplateNumberText();
+        // 验证股票数据
+        List<StockData> newStocks = settingsComponent.getStocks();
+        if (newStocks != null) {
+            for (StockData stock : newStocks) {
+                if (stock.getCode() == null || stock.getCode().trim().isEmpty()) {
+                    throw new ConfigurationException("股票代码不能为空");
+                }
+                if (stock.getBuyPrice() < 0 || stock.getSellPrice() < 0) {
+                    throw new ConfigurationException("买入价和卖出价不能为负数");
+                }
+            }
+            settings.stocks = new ArrayList<>(newStocks);
+        } else {
+            settings.stocks = new ArrayList<>();
+        }
+
+        // 验证微信配置
+        String appid = settingsComponent.getAppidText();
+        String secret = settingsComponent.getSecretText();
+        String openId = settingsComponent.getOpenIdText();
+        String templateNumber = settingsComponent.getTemplateNumberText();
+
+        // 如果配置了微信，则验证必填字段
+        if (appid != null && !appid.trim().isEmpty()) {
+            if (secret == null || secret.trim().isEmpty()) {
+                throw new ConfigurationException("配置了AppID时，Secret不能为空");
+            }
+            if (openId == null || openId.trim().isEmpty()) {
+                throw new ConfigurationException("配置了AppID时，OpenID不能为空");
+            }
+        }
+
+        // 使用bindWechat方法更新微信配置
+        if (appid != null && !appid.trim().isEmpty()) {
+            settings.bindWechat(appid, secret, openId);
+        } else {
+            settings.unbindWechat();
+        }
+        settings.templateNumber = templateNumber;
     }
 
     @Override
     public void reset() {
+        if (settingsComponent == null || settings == null) {
+            return;
+        }
+
+        // 重置股票配置
         settingsComponent.setStocks(new ArrayList<>(settings.stocks));
-        // 重置微信配置
-        settingsComponent.setAppidText(settings.appid);
-        settingsComponent.setSecretText(settings.secret);
-        settingsComponent.setOpenIdText(settings.openId);
-        settingsComponent.setTemplateNumberText(settings.templateNumber);
+
+        // 使用getter方法获取微信配置，并用空字符串代替null
+        settingsComponent.setAppidText(settings.getAppid() != null ? settings.getAppid() : "");
+        settingsComponent.setSecretText(settings.getSecret() != null ? settings.getSecret() : "");
+        settingsComponent.setOpenIdText(settings.getOpenId() != null ? settings.getOpenId() : "");
+        settingsComponent.setTemplateNumberText(settings.templateNumber != null ? settings.templateNumber : "");
     }
 
     @Override

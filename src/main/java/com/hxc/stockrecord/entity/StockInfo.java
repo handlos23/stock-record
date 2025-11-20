@@ -1,41 +1,26 @@
 package com.hxc.stockrecord.entity;
 
 import org.apache.commons.lang3.StringUtils;
-
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * @Description:
- * @Author: huangxingchang
- * @Date: 2025-11-11
- * @Version: V1.0
- */
 public class StockInfo {
     private String code;
     private String name;
     private String now;
-    private String change;//涨跌
+    private String change;
     private String changePercent;
     private String time;
-    /**
-     * 最高价
-     */
     private String max;
-    /**
-     * 最低价
-     */
     private String min;
-
-    private String costPrise;//成本价
-    private String bonds;//持仓
-    private String incomePercent;//收益率
-    private String income;//收益
+    private String costPrise;
+    private String bonds;
+    private String incomePercent;
+    private String income;
 
     public StockInfo() {
     }
 
-    //配置code同时配置成本价和成本值
     public StockInfo(String code) {
         if (StringUtils.isNotBlank(code)) {
             String[] codeStr = code.split(",");
@@ -54,114 +39,43 @@ public class StockInfo {
         this.name = "--";
     }
 
-    public StockInfo(String code, Map<String, String[]> codeMap){
+    public StockInfo(String code, Map<String, String[]> codeMap) {
         this.code = code;
-        if(codeMap.containsKey(code)){
+        if(codeMap.containsKey(code)) {
             String[] codeStr = codeMap.get(code);
             if (codeStr.length > 2) {
                 this.code = codeStr[0];
                 this.costPrise = codeStr[1];
-//                this.cost = codeStr[2];
                 this.bonds = codeStr[2];
             }
         }
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getNow() {
-        return now;
-    }
-
-    public void setNow(String now) {
-        this.now = now;
-    }
-
-    public String getChange() {
-        return change;
-    }
-
-    public void setChange(String change) {
-        this.change = change;
-    }
-
-    public String getChangePercent() {
-        return changePercent;
-    }
-
-    public void setChangePercent(String changePercent) {
-        this.changePercent = changePercent;
-    }
-
-    public String getTime() {
-        return time;
-    }
-
-    public void setTime(String time) {
-        this.time = time;
-    }
-
-    public String getMax() {
-        return max;
-    }
-
-    public void setMax(String max) {
-        this.max = max;
-    }
-
-    public String getMin() {
-        return min;
-    }
-
-    public void setMin(String min) {
-        this.min = min;
-    }
-
-    public String getCostPrise() {
-        return costPrise;
-    }
-
-    public void setCostPrise(String costPrise) {
-        this.costPrise = costPrise;
-    }
-
-    public String getBonds() {
-        return bonds;
-    }
-
-    public void setBonds(String bonds) {
-        this.bonds = bonds;
-    }
-
-    public String getIncomePercent() {
-        return incomePercent;
-    }
-
-    public void setIncomePercent(String incomePercent) {
-        this.incomePercent = incomePercent;
-    }
-
-    public String getIncome() {
-        return income;
-    }
-
-    public void setIncome(String income) {
-        this.income = income;
-    }
+    // Getters and setters
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getNow() { return now; }
+    public void setNow(String now) { this.now = now; }
+    public String getChange() { return change; }
+    public void setChange(String change) { this.change = change; }
+    public String getChangePercent() { return changePercent; }
+    public void setChangePercent(String changePercent) { this.changePercent = changePercent; }
+    public String getTime() { return time; }
+    public void setTime(String time) { this.time = time; }
+    public String getMax() { return max; }
+    public void setMax(String max) { this.max = max; }
+    public String getMin() { return min; }
+    public void setMin(String min) { this.min = min; }
+    public String getCostPrise() { return costPrise; }
+    public void setCostPrise(String costPrise) { this.costPrise = costPrise; }
+    public String getBonds() { return bonds; }
+    public void setBonds(String bonds) { this.bonds = bonds; }
+    public String getIncomePercent() { return incomePercent; }
+    public void setIncomePercent(String incomePercent) { this.incomePercent = incomePercent; }
+    public String getIncome() { return income; }
+    public void setIncome(String income) { this.income = income; }
 
     @Override
     public boolean equals(Object o) {
@@ -176,14 +90,6 @@ public class StockInfo {
         return Objects.hash(code);
     }
 
-
-    /**
-     * 返回列名的VALUE 用作展示
-     *
-     * @param colums   字段名
-     * @param colorful 隐蔽模式
-     * @return 对应列名的VALUE值 无法匹配返回""
-     */
     public String getValueByColumn(String colums, boolean colorful) {
         switch (colums) {
             case "编码":
@@ -224,7 +130,6 @@ public class StockInfo {
                 return timeStr;
             default:
                 return "";
-
         }
     }
 }

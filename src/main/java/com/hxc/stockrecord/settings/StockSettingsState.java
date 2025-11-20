@@ -16,18 +16,15 @@ import java.util.List;
 @Service
 @State(
         name = "StockSettingsState",
-        storages = @Storage("StockSettingsState.xml")
+        storages = @Storage("StockSettingsState.xml"),
+        reloadable = true
 )
 public final class StockSettingsState implements PersistentStateComponent<StockSettingsState> {
     public List<StockData> stocks = new ArrayList<>();
-
-    // 微信配置字段
     private String appid;
     private String secret;
     private String openId;
-    public String templateNumber;  // 保持手动配置
-
-    // 微信绑定状态
+    public String templateNumber;
     private boolean isWechatBound = false;
 
     @Nullable
@@ -39,13 +36,15 @@ public final class StockSettingsState implements PersistentStateComponent<StockS
     @Override
     public void loadState(@NotNull StockSettingsState state) {
         XmlSerializerUtil.copyBean(state, this);
+        if (this.stocks == null) {
+            this.stocks = new ArrayList<>();
+        }
     }
 
     public static StockSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(StockSettingsState.class);
     }
 
-    // 微信绑定相关方法
     public void bindWechat(String appid, String secret, String openId) {
         this.appid = appid;
         this.secret = secret;
@@ -64,16 +63,7 @@ public final class StockSettingsState implements PersistentStateComponent<StockS
         return isWechatBound;
     }
 
-    // Getter 方法
-    public String getAppid() {
-        return appid;
-    }
-
-    public String getSecret() {
-        return secret;
-    }
-
-    public String getOpenId() {
-        return openId;
-    }
+    public String getAppid() { return appid; }
+    public String getSecret() { return secret; }
+    public String getOpenId() { return openId; }
 }

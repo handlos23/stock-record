@@ -1,22 +1,12 @@
-<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
     <id>com.hxc.stock-record</id>
-
-    <!-- Public plugin name should be written in Title Case.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>Stock-record</name>
-
-    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="hanglos@163.com" url="https://www.baidu.com">huangxc</vendor>
-    <version>1.0.1</version>>
+    <version>1.0.1</version>
     <idea-version since-build="212" until-build="243.*"/>
 
-    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
-         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
-         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-    用于记录<br>
+    用于记录股票信息的插件<br>
   ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -26,22 +16,15 @@
             <implementation-class>com.hxc.stockrecord.settings.StockSettingsState</implementation-class>
         </component>
     </application-components>
+
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="stockRecord" secondary="true" anchor="right" icon="/META-INF/pluginIcon.svg"
+        <toolWindow id="stockRecord" secondary="true" anchor="right"
+                    icon="/META-INF/pluginIcon.svg"
                     factoryClass="com.hxc.stockrecord.toolwindow.StockToolWindowFactory"/>
-        <applicationConfigurable parentId="tools" instance="com.hxc.stockrecord.settings.StockSettingsConfigurable"
+        <applicationConfigurable parentId="tools"
+                                 instance="com.hxc.stockrecord.settings.StockSettingsConfigurable"
                                  id="com.hxc.stockrecord.settings.StockSettingsConfigurable"
                                  displayName="Stock Settings"/>
-        <!-- 添加服务 -->
         <applicationService serviceImplementation="com.hxc.stockrecord.service.WechatBindingService"/>
-
     </extensions>
-
-    <!-- 添加权限声明 -->
-    <application-components>
-        <component>
-            <implementation-class>com.hxc.stockrecord.service.WechatBindingService</implementation-class>
-        </component>
-    </application-components>
-
 </idea-plugin>

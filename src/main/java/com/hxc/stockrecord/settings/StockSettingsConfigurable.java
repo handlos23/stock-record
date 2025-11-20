@@ -28,7 +28,6 @@ public class StockSettingsConfigurable implements Configurable {
         settingsComponent = new StockSettingsComponent();
         settings = StockSettingsState.getInstance();
 
-        // 设置首选大小
         JComponent component = settingsComponent.getPanel();
         component.setPreferredSize(new Dimension(800, 500));
         return component;
@@ -43,7 +42,6 @@ public class StockSettingsConfigurable implements Configurable {
         List<StockData> currentStocks = settingsComponent.getStocks();
         boolean stocksModified = !Objects.equals(currentStocks, settings.stocks);
 
-        // 使用getter方法获取微信配置
         boolean wechatModified = !Objects.equals(settingsComponent.getAppidText(), settings.getAppid())
                 || !Objects.equals(settingsComponent.getSecretText(), settings.getSecret())
                 || !Objects.equals(settingsComponent.getOpenIdText(), settings.getOpenId())
@@ -80,7 +78,6 @@ public class StockSettingsConfigurable implements Configurable {
         String openId = settingsComponent.getOpenIdText();
         String templateNumber = settingsComponent.getTemplateNumberText();
 
-        // 如果配置了微信，则验证必填字段
         if (appid != null && !appid.trim().isEmpty()) {
             if (secret == null || secret.trim().isEmpty()) {
                 throw new ConfigurationException("配置了AppID时，Secret不能为空");
@@ -88,10 +85,6 @@ public class StockSettingsConfigurable implements Configurable {
             if (openId == null || openId.trim().isEmpty()) {
                 throw new ConfigurationException("配置了AppID时，OpenID不能为空");
             }
-        }
-
-        // 使用bindWechat方法更新微信配置
-        if (appid != null && !appid.trim().isEmpty()) {
             settings.bindWechat(appid, secret, openId);
         } else {
             settings.unbindWechat();
@@ -108,7 +101,7 @@ public class StockSettingsConfigurable implements Configurable {
         // 重置股票配置
         settingsComponent.setStocks(new ArrayList<>(settings.stocks));
 
-        // 使用getter方法获取微信配置，并用空字符串代替null
+        // 重置微信配置
         settingsComponent.setAppidText(settings.getAppid() != null ? settings.getAppid() : "");
         settingsComponent.setSecretText(settings.getSecret() != null ? settings.getSecret() : "");
         settingsComponent.setOpenIdText(settings.getOpenId() != null ? settings.getOpenId() : "");

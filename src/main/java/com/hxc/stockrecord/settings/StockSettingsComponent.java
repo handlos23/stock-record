@@ -1,7 +1,6 @@
 package com.hxc.stockrecord.settings;
 
 import com.hxc.stockrecord.model.StockData;
-import com.hxc.stockrecord.service.WechatBindingService;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.util.ui.JBUI;
 
@@ -23,16 +22,11 @@ public class StockSettingsComponent {
     private final JTextField templateNumberField = new JTextField();
 
     public StockSettingsComponent() {
-        // 创建主面板，使用垂直布局
         mainPanel = new JPanel(new BorderLayout(0, 5));
 
-        // 创建股票配置面板
         JPanel stockPanel = createStockPanel();
-
-        // 创建微信配置面板
         JPanel wechatPanel = createWechatPanel();
 
-        // 使用选项卡布局来组织配置
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("股票配置", stockPanel);
         tabbedPane.addTab("微信配置", wechatPanel);
@@ -43,12 +37,10 @@ public class StockSettingsComponent {
     private JPanel createStockPanel() {
         tableModel = new StockTableModel();
         stockTable = new JTable(tableModel);
-
-        stockTable.setRowHeight(24); // 减小行高
+        stockTable.setRowHeight(24);
         stockTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         stockTable.setAutoCreateRowSorter(true);
 
-        // 创建按钮面板
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
         JButton addButton = new JButton("添加");
         JButton removeButton = new JButton("删除");
@@ -59,12 +51,10 @@ public class StockSettingsComponent {
         buttonPanel.add(addButton);
         buttonPanel.add(removeButton);
 
-        // 创建股票配置面板
         JPanel panel = new JPanel(new BorderLayout(0, 5));
         panel.add(new JScrollPane(stockTable), BorderLayout.CENTER);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
-        // 添加边距
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         wrapper.add(panel, BorderLayout.CENTER);
@@ -72,7 +62,6 @@ public class StockSettingsComponent {
     }
 
     private JPanel createWechatPanel() {
-        // 创建微信配置面板
         JPanel panel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -86,7 +75,6 @@ public class StockSettingsComponent {
 
         gbc.gridx = 1;
         gbc.weightx = 1.0;
-//        appidField.setEditable(false); // 设置为只读，通过扫码绑定获取
         panel.add(appidField, gbc);
 
         gbc.gridx = 0;
@@ -97,7 +85,6 @@ public class StockSettingsComponent {
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1.0;
-//        secretField.setEditable(false); // 设置为只读，通过扫码绑定获取
         panel.add(secretField, gbc);
 
         gbc.gridx = 0;
@@ -108,7 +95,6 @@ public class StockSettingsComponent {
         gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.weightx = 1.0;
-//        openIdField.setEditable(false); // 设置为只读，通过扫码绑定获取
         panel.add(openIdField, gbc);
 
         gbc.gridx = 0;
@@ -121,35 +107,6 @@ public class StockSettingsComponent {
         gbc.weightx = 1.0;
         panel.add(templateNumberField, gbc);
 
-        // 添加按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton bindButton = new JButton("扫码绑定");
-        JButton unbindButton = new JButton("解除绑定");
-
-        bindButton.addActionListener(e -> {
-            // 调用微信绑定服务
-            WechatBindingService.getInstance().showBindingDialog();
-        });
-
-        unbindButton.addActionListener(e -> {
-            // 解除绑定
-            WechatBindingService.getInstance().unbind();
-            // 清空显示
-            appidField.setText("");
-            secretField.setText("");
-            openIdField.setText("");
-        });
-
-        buttonPanel.add(bindButton);
-        buttonPanel.add(unbindButton);
-
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        gbc.weightx = 1.0;
-        panel.add(buttonPanel, gbc);
-
-        // 添加边距
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         wrapper.add(panel, BorderLayout.NORTH);
@@ -178,40 +135,27 @@ public class StockSettingsComponent {
         }
     }
 
-    // 添加微信配置的getter和setter方法
-    public String getAppidText() {
-        return appidField.getText();
-    }
-
+    // Getters and setters for WeChat configuration
+    public String getAppidText() { return appidField.getText(); }
     public void setAppidText(String text) {
         ApplicationManager.getApplication().invokeLater(() -> appidField.setText(text));
     }
 
-    public String getSecretText() {
-        return secretField.getText();
-    }
-
+    public String getSecretText() { return secretField.getText(); }
     public void setSecretText(String text) {
         ApplicationManager.getApplication().invokeLater(() -> secretField.setText(text));
     }
 
-    public String getOpenIdText() {
-        return openIdField.getText();
-    }
-
+    public String getOpenIdText() { return openIdField.getText(); }
     public void setOpenIdText(String text) {
         ApplicationManager.getApplication().invokeLater(() -> openIdField.setText(text));
     }
 
-    public String getTemplateNumberText() {
-        return templateNumberField.getText();
-    }
-
+    public String getTemplateNumberText() { return templateNumberField.getText(); }
     public void setTemplateNumberText(String text) {
         templateNumberField.setText(text);
     }
 
-    // 更新微信配置信息
     public void updateWechatConfig(String appid, String secret, String openId) {
         ApplicationManager.getApplication().invokeLater(() -> {
             appidField.setText(appid);
@@ -220,21 +164,11 @@ public class StockSettingsComponent {
         });
     }
 
-    public JPanel getPanel() {
-        return mainPanel;
-    }
+    public JPanel getPanel() { return mainPanel; }
+    public JComponent getPreferredFocusedComponent() { return stockTable; }
 
-    public JComponent getPreferredFocusedComponent() {
-        return stockTable;
-    }
-
-    public List<StockData> getStocks() {
-        return tableModel.getStocks();
-    }
-
-    public void setStocks(List<StockData> stocks) {
-        tableModel.setStocks(stocks);
-    }
+    public List<StockData> getStocks() { return tableModel.getStocks(); }
+    public void setStocks(List<StockData> stocks) { tableModel.setStocks(stocks); }
 
     private static class StockTableModel extends javax.swing.table.AbstractTableModel {
         private final String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice"};
@@ -251,39 +185,24 @@ public class StockSettingsComponent {
             fireTableRowsDeleted(row, row);
         }
 
-        public List<StockData> getStocks() {
-            return new ArrayList<>(stocks);
-        }
-
+        public List<StockData> getStocks() { return new ArrayList<>(stocks); }
         public void setStocks(List<StockData> stocks) {
             this.stocks = new ArrayList<>(stocks);
             fireTableDataChanged();
         }
 
         @Override
-        public int getRowCount() {
-            return stocks.size();
-        }
-
+        public int getRowCount() { return stocks.size(); }
         @Override
-        public int getColumnCount() {
-            return columnNames.length;
-        }
-
+        public int getColumnCount() { return columnNames.length; }
         @Override
-        public String getColumnName(int column) {
-            return columnNames[column];
-        }
-
+        public String getColumnName(int column) { return columnNames[column]; }
         @Override
         public Class<?> getColumnClass(int columnIndex) {
             return columnIndex < 2 ? String.class : Double.class;
         }
-
         @Override
-        public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return true;
-        }
+        public boolean isCellEditable(int rowIndex, int columnIndex) { return true; }
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {

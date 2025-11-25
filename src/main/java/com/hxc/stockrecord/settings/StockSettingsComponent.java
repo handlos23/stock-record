@@ -212,12 +212,8 @@ public class StockSettingsComponent {
                 case 0: return stock.getCode();
                 case 1: return stock.getName();
                 case 2: return stock.getCurrentPrice();
-                case 3: return stock.getBuyPrice();
-                case 4: return stock.getSellPrice();
-                case 10: return stock.isSendMessage();
-                case 11: return stock.getBuyPercent();
-                case 12: return stock.getSellPercent();
-                case 13: return stock.getAlertPrice();
+                case 5: return stock.isSendMessage();
+                case 6: return stock.getAlertPrice();
                 default: return null;
             }
         }
@@ -229,12 +225,8 @@ public class StockSettingsComponent {
                 case 0: stock.setCode((String) aValue); break;
                 case 1: stock.setName((String) aValue); break;
                 case 2: stock.setCurrentPrice((Double) aValue); break;
-                case 3: stock.setBuyPrice((Double) aValue); break;
-                case 4: stock.setSellPrice((Double) aValue); break;
-                case 10: stock.setSendMessage((Boolean) aValue); break;
-                case 11: stock.setBuyPercent((String) aValue); break;
-                case 12: stock.setSellPercent((String) aValue); break;
-                case 13: stock.setAlertPrice((Double) aValue); break;
+                case 5: stock.setSendMessage((Boolean) aValue); break;
+                case 6: stock.setAlertPrice((Double) aValue); break;
             }
             fireTableCellUpdated(rowIndex, columnIndex);
         }

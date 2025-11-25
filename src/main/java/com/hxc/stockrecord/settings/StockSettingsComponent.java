@@ -124,6 +124,7 @@ public class StockSettingsComponent {
         newStock.setSendMessage(true);
         newStock.setBuyPercent("-5");
         newStock.setSellPercent("5");
+        newStock.setAlertPrice(0.0);
         tableModel.addStock(newStock);
     }
 
@@ -171,7 +172,7 @@ public class StockSettingsComponent {
     public void setStocks(List<StockData> stocks) { tableModel.setStocks(stocks); }
 
     private static class StockTableModel extends javax.swing.table.AbstractTableModel {
-        private final String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice"};
+        private final String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice" , "alertPrice"};
         private List<StockData> stocks = new ArrayList<>();
 
         public void addStock(StockData stock) {
@@ -216,6 +217,7 @@ public class StockSettingsComponent {
                 case 10: return stock.isSendMessage();
                 case 11: return stock.getBuyPercent();
                 case 12: return stock.getSellPercent();
+                case 13: return stock.getAlertPrice();
                 default: return null;
             }
         }
@@ -232,6 +234,7 @@ public class StockSettingsComponent {
                 case 10: stock.setSendMessage((Boolean) aValue); break;
                 case 11: stock.setBuyPercent((String) aValue); break;
                 case 12: stock.setSellPercent((String) aValue); break;
+                case 13: stock.setAlertPrice((Double) aValue); break;
             }
             fireTableCellUpdated(rowIndex, columnIndex);
         }

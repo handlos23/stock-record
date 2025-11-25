@@ -10,7 +10,6 @@ import com.hxc.stockrecord.model.StockData;
 import com.hxc.stockrecord.settings.StockSettingsState;
 import com.hxc.stockrecord.utils.HttpClientPool;
 import com.hxc.stockrecord.utils.StockUtils;
-import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -63,7 +62,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice", "updateTime", "change", "changePercent", "sendMessage", "buyPercent", "sellPercent"};
+//            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice", "updateTime", "change", "changePercent", "sendMessage", "buyPercent", "sellPercent","alertPrice"};
+            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "sendMessage", "alertPrice"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -202,27 +202,45 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stockInfo != null ? stockInfo.getChangePercent() : "-",
                             stock.isSendMessage(),
                             stock.getBuyPercent() + "%",
-                            stock.getSellPercent() + "%"
+                            stock.getSellPercent() + "%",
+                            stock.getAlertPrice()
                     };
                     tableModel.addRow(row);
 
                     // 检查是否需要发送微信消息
                     if (stock.isSendMessage() && stockInfo != null) {
+                        BigDecimal alertPrice = new BigDecimal(stock.getAlertPrice());
+
                         String changePercent = stockInfo.getChangePercent();
                         if (changePercent != null) {
-                            BigDecimal changePercentValue = new BigDecimal(changePercent);
-                            if (changePercentValue.compareTo(new BigDecimal(stock.getSellPercent())) > 0) {
-                                sendWxMessage(stockInfo, "今天持有的", "卖");
-                            } else if (changePercentValue.compareTo(new BigDecimal(stock.getBuyPercent())) < 0) {
-                                sendWxMessage(stockInfo, "今天看好的", "买");
-                            }
                             BigDecimal now = new BigDecimal(stockInfo.getNow());
-                            BigDecimal buyPrice = new BigDecimal(stock.getBuyPrice());
-                            BigDecimal totalPercent = (now.subtract(buyPrice)).multiply(new BigDecimal("100"))
-                                    .divide(buyPrice, 2, RoundingMode.HALF_UP);
-                            if (totalPercent.compareTo(new BigDecimal("5")) > 0) {
-                                sendWxMessage(stockInfo, "一直持有的", "卖");
+                            if (stock.getAlertPrice() < 0){
+                                alertPrice = new BigDecimal(Math.abs(stock.getAlertPrice()));
+                                if (now.compareTo(alertPrice) < 0) {
+                                    sendWxMessage(stockInfo, "今天看好的", "买");
+                                }
+                            }else {
+                                if (now.compareTo(alertPrice) > 0) {
+                                    sendWxMessage(stockInfo, "今天持有的", "卖");
+                                }
                             }
+
+
+
+//                            BigDecimal changePercentValue = new BigDecimal(changePercent);
+
+//                            if (changePercentValue.compareTo(new BigDecimal(stock.getSellPercent())) > 0) {
+//                                sendWxMessage(stockInfo, "今天持有的", "卖");
+//                            } else if (changePercentValue.compareTo(new BigDecimal(stock.getBuyPercent())) < 0) {
+//                                sendWxMessage(stockInfo, "今天看好的", "买");
+//                            }
+//                            BigDecimal now = new BigDecimal(stockInfo.getNow());
+//                            BigDecimal buyPrice = new BigDecimal(stock.getBuyPrice());
+//                            BigDecimal totalPercent = (now.subtract(buyPrice)).multiply(new BigDecimal("100"))
+//                                    .divide(buyPrice, 2, RoundingMode.HALF_UP);
+//                            if (totalPercent.compareTo(new BigDecimal("5")) > 0) {
+//                                sendWxMessage(stockInfo, "一直持有的", "卖");
+//                            }
                         }
                     }
                 }
@@ -246,6 +264,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JCheckBox sendMessageField = new JCheckBox("是否发送", true);
                 JTextField buyPercentField = new JTextField();
                 JTextField sellPercentField = new JTextField();
+                JTextField alertPriceField = new JTextField();
 
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
@@ -263,6 +282,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(buyPercentField);
                 panel.add(new JLabel("sellPercent(%):"));
                 panel.add(sellPercentField);
+                panel.add(new JLabel("alertPrice:"));
+                panel.add(alertPriceField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -284,6 +305,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         newStock.setSendMessage(sendMessageField.isSelected());
                         newStock.setBuyPercent(buyPercentField.getText());
                         newStock.setSellPercent(sellPercentField.getText());
+                        newStock.setAlertPrice(Double.parseDouble(alertPriceField.getText()));
                         state.stocks.add(newStock);
                         refreshData();
                     } catch (NumberFormatException e) {
@@ -318,6 +340,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JCheckBox sendMessageField = new JCheckBox("是否发送", selectedStock.isSendMessage());
                 JTextField buyPercentField = new JTextField(selectedStock.getBuyPercent());
                 JTextField sellPercentField = new JTextField(selectedStock.getSellPercent());
+                JTextField alertPriceField = new JTextField(String.valueOf(selectedStock.getAlertPrice()));
 
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
@@ -335,6 +358,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(buyPercentField);
                 panel.add(new JLabel("sellPercent(%):"));
                 panel.add(sellPercentField);
+                panel.add(new JLabel("alertPrice:"));
+                panel.add(alertPriceField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -355,6 +380,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         selectedStock.setSendMessage(sendMessageField.isSelected());
                         selectedStock.setBuyPercent(buyPercentField.getText());
                         selectedStock.setSellPercent(sellPercentField.getText());
+                        selectedStock.setAlertPrice(Double.parseDouble(alertPriceField.getText()));
                         refreshData();
                     } catch (NumberFormatException e) {
                         JOptionPane.showMessageDialog(this.panel, "请输入有效的数字！");

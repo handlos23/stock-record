@@ -196,21 +196,21 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 //                        stock.setIncreaseRate(Double.parseDouble(stockInfo.getChangePercent()));
 //                        stock.setDifference(Double.parseDouble(stockInfo.getChange()));
                     }
-
+                    //"code", "name", "currencyPrice", "change", "changePercent", "sendMessage", "alertPrice"
                     Object[] row = {
                             stock.getCode(),
                             stock.getName(),
                             stock.getCurrentPrice(),
-                            stock.getBuyPrice(),
-                            stock.getSellPrice(),
-                            stock.getIncreaseRate(),
-                            stock.getDifference(),
-                            stock.getUpdateTime(),
+//                            stock.getBuyPrice(),
+//                            stock.getSellPrice(),
+//                            stock.getIncreaseRate(),
+//                            stock.getDifference(),
+//                            stock.getUpdateTime(),
                             stockInfo != null ? stockInfo.getChange() : "-",
                             stockInfo != null ? stockInfo.getChangePercent() : "-",
                             stock.isSendMessage(),
-                            stock.getBuyPercent() + "%",
-                            stock.getSellPercent() + "%",
+//                            stock.getBuyPercent() + "%",
+//                            stock.getSellPercent() + "%",
                             stock.getAlertPrice()
                     };
                     tableModel.addRow(row);

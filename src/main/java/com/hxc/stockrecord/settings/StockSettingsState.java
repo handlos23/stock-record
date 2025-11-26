@@ -21,9 +21,9 @@ import java.util.List;
 )
 public final class StockSettingsState implements PersistentStateComponent<StockSettingsState> {
     public List<StockData> stocks = new ArrayList<>();
-    private String appid;
-    private String secret;
-    private String openId;
+    public String appid;
+    public String secret;
+    public String openId;
     public String templateNumber;
     private boolean isWechatBound = false;
 

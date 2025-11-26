@@ -118,12 +118,12 @@ public class StockSettingsComponent {
         newStock.setCode("");
         newStock.setName("");
         newStock.setCurrentPrice(0.0);
-        newStock.setBuyPrice(0.0);
-        newStock.setSellPrice(0.0);
-        newStock.setUpdateTime(dateFormat.format(new Date()));
+//        newStock.setBuyPrice(0.0);
+//        newStock.setSellPrice(0.0);
+//        newStock.setUpdateTime(dateFormat.format(new Date()));
         newStock.setSendMessage(true);
-        newStock.setBuyPercent("-5");
-        newStock.setSellPercent("5");
+//        newStock.setBuyPercent("-5");
+//        newStock.setSellPercent("5");
         newStock.setAlertPrice(0.0);
         tableModel.addStock(newStock);
     }
@@ -139,17 +139,20 @@ public class StockSettingsComponent {
     // Getters and setters for WeChat configuration
     public String getAppidText() { return appidField.getText(); }
     public void setAppidText(String text) {
-        ApplicationManager.getApplication().invokeLater(() -> appidField.setText(text));
+        appidField.setText(text);
+//        ApplicationManager.getApplication().invokeLater(() -> appidField.setText(text));
     }
 
     public String getSecretText() { return secretField.getText(); }
     public void setSecretText(String text) {
-        ApplicationManager.getApplication().invokeLater(() -> secretField.setText(text));
+        secretField.setText(text);
+//        ApplicationManager.getApplication().invokeLater(() -> secretField.setText(text));
     }
 
     public String getOpenIdText() { return openIdField.getText(); }
     public void setOpenIdText(String text) {
-        ApplicationManager.getApplication().invokeLater(() -> openIdField.setText(text));
+        openIdField.setText(text);
+//        ApplicationManager.getApplication().invokeLater(() -> openIdField.setText(text));
     }
 
     public String getTemplateNumberText() { return templateNumberField.getText(); }
@@ -172,7 +175,7 @@ public class StockSettingsComponent {
     public void setStocks(List<StockData> stocks) { tableModel.setStocks(stocks); }
 
     private static class StockTableModel extends javax.swing.table.AbstractTableModel {
-        private final String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice" , "alertPrice"};
+        private final String[] columnNames = {"code", "name", "currencyPrice", "sendMessage" , "alertPrice"};
         private List<StockData> stocks = new ArrayList<>();
 
         public void addStock(StockData stock) {

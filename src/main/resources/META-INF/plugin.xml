@@ -6,18 +6,15 @@
     <idea-version since-build="212" until-build="243.*"/>
 
     <description><![CDATA[
-    用于记录股票信息的插件<br>
+    用于记录信息的插件<br>
   ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
 
-    <application-components>
-        <component>
-            <implementation-class>com.hxc.stockrecord.settings.StockSettingsState</implementation-class>
-        </component>
-    </application-components>
-
     <extensions defaultExtensionNs="com.intellij">
+        <!-- 将 StockSettingsState 改为服务声明 -->
+        <applicationService serviceImplementation="com.hxc.stockrecord.settings.StockSettingsState"/>
+
         <toolWindow id="stockRecord" secondary="true" anchor="right"
                     icon="/META-INF/pluginIcon.svg"
                     factoryClass="com.hxc.stockrecord.toolwindow.StockToolWindowFactory"/>

@@ -89,6 +89,9 @@ public class StockSettingsConfigurable implements Configurable {
         } else {
             settings.unbindWechat();
         }
+        settings.appid = appid;
+        settings.secret = secret;
+        settings.openId = openId;
         settings.templateNumber = templateNumber;
     }
 

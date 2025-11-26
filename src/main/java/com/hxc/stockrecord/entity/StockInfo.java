@@ -17,6 +17,8 @@ public class StockInfo {
     private String bonds;
     private String incomePercent;
     private String income;
+    private String buyPriceDiffenece;
+    private String buyPriceDiffenecePercent;
 
     public StockInfo() {
     }
@@ -76,6 +78,11 @@ public class StockInfo {
     public void setIncomePercent(String incomePercent) { this.incomePercent = incomePercent; }
     public String getIncome() { return income; }
     public void setIncome(String income) { this.income = income; }
+
+    public String getBuyPriceDiffenece() { return buyPriceDiffenece; }
+    public void setBuyPriceDiffenece(String buyPriceDiffenece) { this.buyPriceDiffenece = buyPriceDiffenece; }
+    public String getBuyPriceDiffenecePercent() { return buyPriceDiffenecePercent; }
+    public void setBuyPriceDiffenecePercent(String buyPriceDiffenecePercent) { this.buyPriceDiffenecePercent = buyPriceDiffenecePercent; }
 
     @Override
     public boolean equals(Object o) {

@@ -17,6 +17,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -35,6 +36,12 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import net.sourceforge.pinyin4j.PinyinHelper;
+import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
+import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
+import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
+import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 public class StockToolWindowFactory implements ToolWindowFactory {
     private static final String URL = "http://qt.gtimg.cn/q=";
@@ -183,6 +190,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                     StockInfo stockInfo = stockMap.get(stock.getCode());
                     if (stockInfo != null) {
                         // 更新StockData中的实时数据
+                        stock.setName(toPinyin(stockInfo.getName()));
                         stock.setCurrentPrice(Double.parseDouble(stockInfo.getNow()));
                         stock.setUpdateTime(stockInfo.getTime());
 //                        stock.setIncreaseRate(Double.parseDouble(stockInfo.getChangePercent()));
@@ -210,7 +218,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                     // 检查是否需要发送微信消息
                     if (stock.isSendMessage() && stockInfo != null) {
                         BigDecimal alertPrice = new BigDecimal(stock.getAlertPrice());
-
+                        BigDecimal buyPrice = ObjectUtils.isEmpty(stock.getBuyPrice()) ? BigDecimal.ZERO : new BigDecimal(stock.getBuyPrice());
                         String changePercent = stockInfo.getChangePercent();
                         if (changePercent != null) {
                             BigDecimal now = new BigDecimal(stockInfo.getNow());
@@ -224,23 +232,6 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                                     sendWxMessage(stockInfo, "今天持有的", "卖");
                                 }
                             }
-
-
-
-//                            BigDecimal changePercentValue = new BigDecimal(changePercent);
-
-//                            if (changePercentValue.compareTo(new BigDecimal(stock.getSellPercent())) > 0) {
-//                                sendWxMessage(stockInfo, "今天持有的", "卖");
-//                            } else if (changePercentValue.compareTo(new BigDecimal(stock.getBuyPercent())) < 0) {
-//                                sendWxMessage(stockInfo, "今天看好的", "买");
-//                            }
-//                            BigDecimal now = new BigDecimal(stockInfo.getNow());
-//                            BigDecimal buyPrice = new BigDecimal(stock.getBuyPrice());
-//                            BigDecimal totalPercent = (now.subtract(buyPrice)).multiply(new BigDecimal("100"))
-//                                    .divide(buyPrice, 2, RoundingMode.HALF_UP);
-//                            if (totalPercent.compareTo(new BigDecimal("5")) > 0) {
-//                                sendWxMessage(stockInfo, "一直持有的", "卖");
-//                            }
                         }
                     }
                 }
@@ -430,7 +421,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         .append(stockInfo.getNow())
                         .append("\",\"color\":\"#FF0000\"},")
                         .append("\"keyword2\":{\"value\":\"")
-                        .append("涨跌为" + stockInfo.getChange() + "，涨跌幅度为：" + stockInfo.getChangePercent() + "%")
+                        .append("涨跌为" + stockInfo.getChange() + "，涨跌幅度为：" + stockInfo.getChangePercent() + "%，")
                         .append("\",\"color\":\"#173177\"},")
                         .append("\"remark\":{\"value\":\"")
                         .append(operateType)
@@ -548,5 +539,31 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             stockInfoList.add(bean);
         }
         return stockInfoList;
+    }
+
+    public static String toPinyin(String chinese) {
+        HanyuPinyinOutputFormat format = new HanyuPinyinOutputFormat();
+        format.setCaseType(HanyuPinyinCaseType.LOWERCASE);
+        format.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
+
+        StringBuilder pinyin = new StringBuilder();
+        char[] chars = chinese.toCharArray();
+
+        try {
+            for (char c : chars) {
+                if (Character.toString(c).matches("[\\u4E00-\\u9FA5]+")) {
+                    String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray(c, format);
+                    if (pinyinArray != null && pinyinArray.length > 0) {
+                        pinyin.append(pinyinArray[0]);
+                    }
+                } else {
+                    pinyin.append(c);
+                }
+            }
+        } catch (BadHanyuPinyinOutputFormatCombination e) {
+            e.printStackTrace();
+        }
+
+        return pinyin.toString();
     }
 }

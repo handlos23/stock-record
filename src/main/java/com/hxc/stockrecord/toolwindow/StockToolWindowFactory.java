@@ -16,8 +16,12 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import net.sourceforge.pinyin4j.PinyinHelper;
+import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
+import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
+import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
+import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -27,6 +31,7 @@ import javax.swing.*;
 import javax.swing.Timer;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,12 +41,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import net.sourceforge.pinyin4j.PinyinHelper;
-import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
-import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
-import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
-import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 public class StockToolWindowFactory implements ToolWindowFactory {
     private static final String URL = "http://qt.gtimg.cn/q=";
@@ -67,10 +66,31 @@ public class StockToolWindowFactory implements ToolWindowFactory {
         private final String WECHAT_MP_GET_TOKEN_URL = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential";
         private final String WECHAT_MP_SEND_MSG_URL = "https://api.weixin.qq.com/cgi-bin/message/template/send";
 
+        private void setupTableSorter() {
+            TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel) {
+                @Override
+                public Comparator<?> getComparator(int column) {
+                    // 对于数值列使用自定义比较器
+                    if (column >= 2) { // 从第2列开始是数值列
+                        return (o1, o2) -> {
+                            try {
+                                double d1 = Double.parseDouble(o1.toString());
+                                double d2 = Double.parseDouble(o2.toString());
+                                return Double.compare(d1, d2);
+                            } catch (NumberFormatException e) {
+                                return 0;
+                            }
+                        };
+                    }
+                    return super.getComparator(column);
+                }
+            };
+            table.setRowSorter(sorter);
+        }
+
         public StockToolWindow(Project project) {
             this.project = project;
-//            String[] columnNames = {"code", "name", "currencyPrice", "buyPrice", "sellPrice", "increase(%)", "diffencyPrice", "updateTime", "change", "changePercent", "sendMessage", "buyPercent", "sellPercent","alertPrice"};
-            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "sendMessage", "alertPrice"};
+            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -79,26 +99,29 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
-                    return columnIndex < 2 ? String.class : Double.class;
+                    if (columnIndex >= 2 && columnIndex != 7) { // sendMessage列是Boolean类型
+                        return Number.class;
+                    }
+                    return columnIndex == 7 ? Boolean.class : String.class;
                 }
             };
 
             table.setModel(tableModel);
-            table.setAutoCreateRowSorter(true);
+            setupTableSorter();
 
             // 设置渲染器以更好地显示数字
             DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value,
                                                                boolean isSelected, boolean hasFocus, int row, int column) {
-                    if (value instanceof Double) {
-                        value = String.format("%.2f", (Double) value);
+                    if (value instanceof Number) {
+                        value = String.format("%.2f", ((Number) value).doubleValue());
                     }
                     Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
                     // 根据涨跌设置颜色
-                    if (column == 5 && value instanceof Double) { // 涨幅列
-                        double rate = (Double) value;
+                    if (column == 4 && value instanceof Number) { // changePercent列
+                        double rate = ((Number) value).doubleValue();
                         if (rate > 0) {
                             component.setForeground(Color.RED);
                         } else if (rate < 0) {
@@ -112,7 +135,9 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             };
 
             for (int i = 2; i < table.getColumnCount(); i++) {
-                table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+                if (i != 7) { // 跳过sendMessage列
+                    table.getColumnModel().getColumn(i).setCellRenderer(renderer);
+                }
             }
 
             panel.add(new JScrollPane(table), BorderLayout.CENTER);
@@ -189,28 +214,20 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 for (StockData stock : state.stocks) {
                     StockInfo stockInfo = stockMap.get(stock.getCode());
                     if (stockInfo != null) {
-                        // 更新StockData中的实时数据
                         stock.setName(toPinyin(stockInfo.getName()));
                         stock.setCurrentPrice(Double.parseDouble(stockInfo.getNow()));
                         stock.setUpdateTime(stockInfo.getTime());
-//                        stock.setIncreaseRate(Double.parseDouble(stockInfo.getChangePercent()));
-//                        stock.setDifference(Double.parseDouble(stockInfo.getChange()));
                     }
-                    //"code", "name", "currencyPrice", "change", "changePercent", "sendMessage", "alertPrice"
+
                     Object[] row = {
                             stock.getCode(),
                             stock.getName(),
                             stock.getCurrentPrice(),
-//                            stock.getBuyPrice(),
-//                            stock.getSellPrice(),
-//                            stock.getIncreaseRate(),
-//                            stock.getDifference(),
-//                            stock.getUpdateTime(),
-                            stockInfo != null ? stockInfo.getChange() : "-",
-                            stockInfo != null ? stockInfo.getChangePercent() : "-",
+                            stockInfo != null ? Double.parseDouble(stockInfo.getChange()) : 0.0,
+                            stockInfo != null ? Double.parseDouble(stockInfo.getChangePercent().replace("%", "")) : 0.0,
+                            stockInfo != null ? Double.parseDouble(stockInfo.getMax()) : 0.0,
+                            stockInfo != null ? Double.parseDouble(stockInfo.getMin()) : 0.0,
                             stock.isSendMessage(),
-//                            stock.getBuyPercent() + "%",
-//                            stock.getSellPercent() + "%",
                             stock.getAlertPrice()
                     };
                     tableModel.addRow(row);
@@ -218,16 +235,15 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                     // 检查是否需要发送微信消息
                     if (stock.isSendMessage() && stockInfo != null) {
                         BigDecimal alertPrice = new BigDecimal(stock.getAlertPrice());
-                        BigDecimal buyPrice = ObjectUtils.isEmpty(stock.getBuyPrice()) ? BigDecimal.ZERO : new BigDecimal(stock.getBuyPrice());
                         String changePercent = stockInfo.getChangePercent();
                         if (changePercent != null) {
                             BigDecimal now = new BigDecimal(stockInfo.getNow());
-                            if (stock.getAlertPrice() < 0){
+                            if (stock.getAlertPrice() < 0) {
                                 alertPrice = new BigDecimal(Math.abs(stock.getAlertPrice()));
                                 if (now.compareTo(alertPrice) < 0) {
                                     sendWxMessage(stockInfo, "今天看好的", "买");
                                 }
-                            }else {
+                            } else {
                                 if (now.compareTo(alertPrice) > 0) {
                                     sendWxMessage(stockInfo, "今天持有的", "卖");
                                 }

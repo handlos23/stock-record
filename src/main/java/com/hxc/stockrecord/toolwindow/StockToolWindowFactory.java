@@ -72,27 +72,46 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel) {
                 @Override
                 public Comparator<?> getComparator(int column) {
-                    // 对于数值列使用自定义比较器
-                    if (column >= 2) { // 从第2列开始是数值列
+                    // 数值列比较器
+                    if (column >= 2 && column != 7 && column != 10) {
                         return (o1, o2) -> {
+                            if (o1 == null && o2 == null) return 0;
+                            if (o1 == null) return -1;
+                            if (o2 == null) return 1;
+
                             try {
                                 double d1 = Double.parseDouble(o1.toString());
                                 double d2 = Double.parseDouble(o2.toString());
                                 return Double.compare(d1, d2);
                             } catch (NumberFormatException e) {
-                                return 0;
+                                return o1.toString().compareTo(o2.toString());
                             }
                         };
                     }
-                    return super.getComparator(column);
+                    // Boolean列比较器
+                    if (column == 7 || column == 10) {
+                        return (o1, o2) -> {
+                            Boolean b1 = (Boolean) o1;
+                            Boolean b2 = (Boolean) o2;
+                            return b1.compareTo(b2);
+                        };
+                    }
+                    // 默认字符串比较器
+                    return (o1, o2) -> {
+                        if (o1 == null && o2 == null) return 0;
+                        if (o1 == null) return -1;
+                        if (o2 == null) return 1;
+                        return o1.toString().compareTo(o2.toString());
+                    };
                 }
             };
             table.setRowSorter(sorter);
         }
 
+
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice"};
+            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -101,10 +120,10 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
-                    if (columnIndex >= 2 && columnIndex != 7) { // sendMessage列是Boolean类型
+                    if (columnIndex >= 2 && columnIndex != 7 && columnIndex != 10) { // sendMessage列是Boolean类型
                         return Number.class;
                     }
-                    return columnIndex == 7 ? Boolean.class : String.class;
+                    return (columnIndex == 7 || columnIndex == 10) ? Boolean.class : String.class;
                 }
             };
 
@@ -137,7 +156,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             };
 
             for (int i = 2; i < table.getColumnCount(); i++) {
-                if (i != 7) { // 跳过sendMessage列
+                if ((i != 7) && (i != 10)) { // 跳过sendMessage列
                     table.getColumnModel().getColumn(i).setCellRenderer(renderer);
                 }
             }
@@ -231,7 +250,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stockInfo != null ? Double.parseDouble(stockInfo.getMin()) : 0.0,
                             stock.isSendMessage(),
                             stock.getAlertPrice(),
-                            stock.getBuyAlertPrice()
+                            stock.getBuyAlertPrice(),
+                            stock.isBuy()
                     };
                     tableModel.addRow(row);
 
@@ -283,6 +303,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JTextField sellPercentField = new JTextField();
                 JTextField alertPriceField = new JTextField();
                 JTextField buyAlertPriceField = new JTextField();
+                JCheckBox isBuyField = new JCheckBox("是否拥有", true);
 
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
@@ -304,6 +325,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(alertPriceField);
                 panel.add(new JLabel("buyAlertPrice:"));
                 panel.add(buyAlertPriceField);
+                panel.add(new JLabel("isBuy:"));
+                panel.add(isBuyField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -327,6 +350,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         newStock.setSellPercent(sellPercentField.getText());
                         newStock.setAlertPrice(Double.parseDouble(alertPriceField.getText()));
                         newStock.setBuyAlertPrice(Double.parseDouble(buyAlertPriceField.getText()));
+                        newStock.setBuy(isBuyField.isSelected());
                         state.stocks.add(newStock);
                         refreshData();
                     } catch (NumberFormatException e) {
@@ -363,7 +387,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 JTextField sellPercentField = new JTextField(selectedStock.getSellPercent());
                 JTextField alertPriceField = new JTextField(String.valueOf(selectedStock.getAlertPrice()));
                 JTextField buyAlertPriceField = new JTextField(String.valueOf(selectedStock.getBuyAlertPrice()));
-
+                JCheckBox isBuyField = new JCheckBox("是否拥有", selectedStock.isBuy());
                 panel.add(new JLabel("code:"));
                 panel.add(codeField);
                 panel.add(new JLabel("name:"));
@@ -384,6 +408,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 panel.add(alertPriceField);
                 panel.add(new JLabel("buyAlertPrice:"));
                 panel.add(buyAlertPriceField);
+                panel.add(new JLabel("isBuy:"));
+                panel.add(isBuyField);
 
                 int result = JOptionPane.showConfirmDialog(
                         this.panel,
@@ -406,6 +432,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                         selectedStock.setSellPercent(sellPercentField.getText());
                         selectedStock.setAlertPrice(Double.parseDouble(alertPriceField.getText()));
                         selectedStock.setBuyAlertPrice(Double.parseDouble(buyAlertPriceField.getText()));
+                        selectedStock.setBuy(isBuyField.isSelected());
                         refreshData();
                     } catch (NumberFormatException e) {
                         JOptionPane.showMessageDialog(this.panel, "请输入有效的数字！");

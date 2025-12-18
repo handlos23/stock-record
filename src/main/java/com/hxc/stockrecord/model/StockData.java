@@ -22,9 +22,10 @@ public class StockData {
     private String max;
     private String min;
     private double buyAlertPrice;
+    private boolean isBuy;
 
 
-    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice, String updateTime, String change, String changePercent, boolean sendMessage, String buyPercent, String sellPercent ,double alertPrice, String max, String min, double buyAlertPrice) {
+    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice, String updateTime, String change, String changePercent, boolean sendMessage, String buyPercent, String sellPercent ,double alertPrice, String max, String min, double buyAlertPrice, boolean isBuy) {
         this.code = code;
         this.name = name;
         this.currentPrice = currentPrice;
@@ -40,6 +41,7 @@ public class StockData {
         this.max = max;
         this.min = min;
         this.buyAlertPrice = buyAlertPrice;
+        this.isBuy = isBuy;
     }
 
     public StockData() {
@@ -58,6 +60,7 @@ public class StockData {
         this.max = this.max;
         this.min = this.min;
         this.buyAlertPrice = this.buyAlertPrice;
+        this.isBuy = this.isBuy;
     }
 
     public double getIncreaseRate() {
@@ -124,4 +127,8 @@ public class StockData {
     public double getBuyAlertPrice() { return buyAlertPrice; }
 
     public void setBuyAlertPrice(double buyAlertPrice) { this.buyAlertPrice = buyAlertPrice; }
+
+    public boolean isBuy() { return isBuy; }
+
+    public void setBuy(boolean isBuy) { this.isBuy = isBuy; }
 }

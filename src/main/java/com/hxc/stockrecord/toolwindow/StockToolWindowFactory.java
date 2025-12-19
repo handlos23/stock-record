@@ -16,7 +16,6 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import kotlinx.html.B;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
@@ -108,28 +107,52 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             table.setRowSorter(sorter);
         }
 
-
         public StockToolWindow(Project project) {
             this.project = project;
             String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
-                    return false;
+                    // 允许编辑所有列，除了change和changePercent（这些是实时数据）
+                    return column != 3 && column != 4;
                 }
 
                 @Override
                 public Class<?> getColumnClass(int columnIndex) {
-                    if (columnIndex >= 2 && columnIndex != 7 && columnIndex != 10) { // sendMessage列是Boolean类型
+                    if (columnIndex >= 2 && columnIndex != 7 && columnIndex != 10) {
                         return Number.class;
                     }
                     return (columnIndex == 7 || columnIndex == 10) ? Boolean.class : String.class;
+                }
+
+                @Override
+                public void setValueAt(Object aValue, int row, int column) {
+                    // 保存修改前的值
+                    Object oldValue = getValueAt(row, column);
+                    super.setValueAt(aValue, row, column);
+
+                    // 验证数值输入
+                    if (column >= 2 && column != 7 && column != 10) {
+                        try {
+                            if (aValue != null) {
+                                Double.parseDouble(aValue.toString());
+                            }
+                        } catch (NumberFormatException e) {
+                            // 恢复原值
+                            super.setValueAt(oldValue, row, column);
+                            JOptionPane.showMessageDialog(panel, "请输入有效的数字！", "输入错误", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
                 }
             };
 
             table.setModel(tableModel);
             setupTableSorter();
 
+            // 设置单元格编辑器
+            DefaultCellEditor numberEditor = new DefaultCellEditor(new JTextField());
+            table.getColumnModel().getColumn(8).setCellEditor(numberEditor);  // alertPrice
+            table.getColumnModel().getColumn(9).setCellEditor(numberEditor);  // buyAlertPrice
             // 设置渲染器以更好地显示数字
             DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
                 @Override
@@ -174,6 +197,10 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             addButton.addActionListener(e -> addStock());
             buttonPanel.add(addButton);
 
+            JButton saveButton = new JButton("保存");
+            saveButton.addActionListener(e -> saveStockData());
+            buttonPanel.add(saveButton);
+
             JButton editButton = new JButton("修改");
             editButton.addActionListener(e -> editStock());
             buttonPanel.add(editButton);
@@ -186,6 +213,27 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
             // 初始化数据
             refreshData();
+        }
+
+        private void saveStockData() {
+            StockSettingsState state = StockSettingsState.getInstance();
+            if (state == null || state.stocks == null) {
+                return;
+            }
+
+            // 遍历表格，更新数据
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                StockData stock = state.stocks.get(i);
+                stock.setCode(tableModel.getValueAt(i, 0).toString());
+                stock.setName(tableModel.getValueAt(i, 1).toString());
+                stock.setCurrentPrice(Double.parseDouble(tableModel.getValueAt(i, 2).toString()));
+                stock.setAlertPrice(Double.parseDouble(tableModel.getValueAt(i, 8).toString()));
+                stock.setBuyAlertPrice(Double.parseDouble(tableModel.getValueAt(i, 9).toString()));
+                stock.setSendMessage((Boolean) tableModel.getValueAt(i, 7));
+                stock.setBuy((Boolean) tableModel.getValueAt(i, 10));
+            }
+
+            JOptionPane.showMessageDialog(panel, "保存成功！");
         }
 
         private void startRefreshTimer() {

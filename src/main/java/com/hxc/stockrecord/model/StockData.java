@@ -23,9 +23,11 @@ public class StockData {
     private String min;
     private double buyAlertPrice;
     private boolean isBuy;
+    private double totalNow;
+    private String totalNowPercent;
 
 
-    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice, String updateTime, String change, String changePercent, boolean sendMessage, String buyPercent, String sellPercent ,double alertPrice, String max, String min, double buyAlertPrice, boolean isBuy) {
+    public StockData(String code, String name, double currentPrice, double buyPrice, double sellPrice, String updateTime, String change, String changePercent, boolean sendMessage, String buyPercent, String sellPercent ,double alertPrice, String max, String min, double buyAlertPrice, boolean isBuy, double totalNow, String totalNowPercent) {
         this.code = code;
         this.name = name;
         this.currentPrice = currentPrice;
@@ -42,6 +44,8 @@ public class StockData {
         this.min = min;
         this.buyAlertPrice = buyAlertPrice;
         this.isBuy = isBuy;
+        this.totalNow = totalNow;
+        this.totalNowPercent = totalNowPercent;
     }
 
     public StockData() {
@@ -61,6 +65,8 @@ public class StockData {
         this.min = this.min;
         this.buyAlertPrice = this.buyAlertPrice;
         this.isBuy = this.isBuy;
+        this.totalNow = this.totalNow;
+        this.totalNowPercent = this.totalNowPercent;
     }
 
     public double getIncreaseRate() {
@@ -131,4 +137,13 @@ public class StockData {
     public boolean isBuy() { return isBuy; }
 
     public void setBuy(boolean isBuy) { this.isBuy = isBuy; }
+
+    public double getTotalNow() { return totalNow; }
+
+    public void setTotalNow(double totalNow) { this.totalNow = totalNow; }
+
+    public String getTotalNowPercent() { return totalNowPercent; }
+
+    public void setTotalNowPercent(String totalNowPercent) { this.totalNowPercent = totalNowPercent; }
+
 }

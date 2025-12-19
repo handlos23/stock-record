@@ -109,7 +109,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy"};
+            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy","totalNow","totalNowPercent"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -282,10 +282,19 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 tableModel.setRowCount(0);
                 for (StockData stock : state.stocks) {
                     StockInfo stockInfo = stockMap.get(stock.getCode());
+                    BigDecimal currentNow = BigDecimal.ZERO;
+                    BigDecimal currentBuyPrice = ObjectUtils.isEmpty(stock.getBuyPrice()) ? BigDecimal.ZERO : new BigDecimal(stock.getBuyPrice());
+
+                    String totalNowPercent = "-";
                     if (stockInfo != null) {
                         stock.setName(toPinyin(stockInfo.getName()));
                         stock.setCurrentPrice(Double.parseDouble(stockInfo.getNow()));
                         stock.setUpdateTime(stockInfo.getTime());
+                        currentNow = ObjectUtils.isEmpty(stockInfo.getNow()) ? BigDecimal.ZERO : new BigDecimal(stockInfo.getNow());
+                    }
+                    BigDecimal totalNow = currentNow.subtract(currentBuyPrice).setScale(2, RoundingMode.HALF_UP);
+                    if (currentBuyPrice.compareTo(BigDecimal.ZERO) > 0){
+                        totalNowPercent = (currentNow.subtract(currentBuyPrice)).divide(currentBuyPrice,6,RoundingMode.HALF_UP).multiply(new BigDecimal("100")).setScale(2,RoundingMode.HALF_UP) + "%";
                     }
 
                     Object[] row = {
@@ -299,7 +308,10 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stock.isSendMessage(),
                             stock.getAlertPrice(),
                             stock.getBuyAlertPrice(),
-                            stock.isBuy()
+                            stock.isBuy(),
+                            totalNow,
+                            totalNowPercent
+
                     };
                     tableModel.addRow(row);
 

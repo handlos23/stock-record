@@ -158,25 +158,38 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value,
                                                                boolean isSelected, boolean hasFocus, int row, int column) {
+                    // 先调用父类方法获取基础组件
+                    Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+
+                    // 设置默认文本对齐方式
+                    setHorizontalAlignment(SwingConstants.RIGHT);
+
+                    // 格式化数字显示
                     if (value instanceof Number) {
                         value = String.format("%.2f", ((Number) value).doubleValue());
                     }
-                    Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
                     // 根据涨跌设置颜色
-                    if (column == 4 && value instanceof Number) { // changePercent列
+                    if ((column == 3 || column == 11) && value instanceof Double) { // changePercent列
                         double rate = ((Number) value).doubleValue();
-                        if (rate > 0) {
-                            component.setForeground(Color.RED);
-                        } else if (rate < 0) {
-                            component.setForeground(Color.GREEN);
-                        } else {
-                            component.setForeground(Color.BLACK);
+                        if (!isSelected) { // 只在非选中状态下设置颜色
+                            if (rate > 0) {
+                                component.setForeground(Color.RED);
+                            } else if (rate < 0) {
+                                component.setForeground(Color.BLUE);
+                            } else {
+                                component.setForeground(Color.BLACK);
+                            }
                         }
+                    } else if (!isSelected) {
+                        // 其他列保持默认颜色
+                        component.setForeground(Color.WHITE);
                     }
+
                     return component;
                 }
             };
+
 
             for (int i = 2; i < table.getColumnCount(); i++) {
                 if ((i != 7) && (i != 10)) { // 跳过sendMessage列

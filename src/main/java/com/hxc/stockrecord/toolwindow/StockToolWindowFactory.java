@@ -149,6 +149,25 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             table.setModel(tableModel);
             setupTableSorter();
 
+            // 设置表格自动调整模式
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+            // 设置列宽
+            table.getColumnModel().getColumn(0).setPreferredWidth(80);  // code
+            table.getColumnModel().getColumn(1).setPreferredWidth(100); // name
+            table.getColumnModel().getColumn(2).setPreferredWidth(80);  // currencyPrice
+            table.getColumnModel().getColumn(3).setPreferredWidth(80);  // change
+            table.getColumnModel().getColumn(4).setPreferredWidth(80);  // changePercent
+            table.getColumnModel().getColumn(5).setPreferredWidth(80);  // max
+            table.getColumnModel().getColumn(6).setPreferredWidth(80);  // min
+            table.getColumnModel().getColumn(7).setPreferredWidth(80);  // sendMessage
+            table.getColumnModel().getColumn(8).setPreferredWidth(80);  // alertPrice
+            table.getColumnModel().getColumn(9).setPreferredWidth(80);  // buyAlertPrice
+            table.getColumnModel().getColumn(10).setPreferredWidth(80); // isBuy
+            table.getColumnModel().getColumn(11).setPreferredWidth(100); // totalNow
+            table.getColumnModel().getColumn(12).setPreferredWidth(100); // totalNowPercent
+            table.getColumnModel().getColumn(13).setPreferredWidth(80);  // turnoverRate
+
             // 设置单元格编辑器
             DefaultCellEditor numberEditor = new DefaultCellEditor(new JTextField());
             table.getColumnModel().getColumn(8).setCellEditor(numberEditor);  // alertPrice
@@ -166,28 +185,6 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                     if (value instanceof Number) {
                         label.setText(String.format("%.2f", ((Number) value).doubleValue()));
                     }
-
-                    // 根据涨跌设置字体颜色（仅在未选中时）
-//                    if ((column == 3 || column == 11) && value instanceof Number) {
-//                        double rate = ((Number) value).doubleValue();
-//                        if (!isSelected) {
-//                            if (rate > 0) {
-//                                label.setForeground(Color.RED);
-//                            } else if (rate < 0) {
-//                                label.setForeground(Color.BLUE);
-//                            } else {
-//                                label.setForeground(Color.BLACK);
-//                            }
-//                        } else {
-//                            label.setForeground(table.getSelectionForeground());
-//                        }
-//                    } else {
-//                        if (!isSelected) {
-//                            label.setForeground(Color.WHITE);
-//                        } else {
-//                            label.setForeground(table.getSelectionForeground());
-//                        }
-//                    }
 
                     // 根据 isBuy 列设置整行样式（未选中时）
                     if (!isSelected) {
@@ -211,7 +208,11 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                 table.getColumnModel().getColumn(i).setCellRenderer(renderer);
             }
 
-            panel.add(new JScrollPane(table), BorderLayout.CENTER);
+            // 创建滚动面板并设置
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+            scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            panel.add(scrollPane, BorderLayout.CENTER);
 
             // 添加按钮面板
             JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));

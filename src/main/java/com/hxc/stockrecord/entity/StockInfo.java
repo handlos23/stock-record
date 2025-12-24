@@ -19,6 +19,8 @@ public class StockInfo {
     private String income;
     private String buyPriceDiffenece;
     private String buyPriceDiffenecePercent;
+    //换手率
+    private String turnoverRate;
 
     public StockInfo() {
     }
@@ -83,6 +85,9 @@ public class StockInfo {
     public void setBuyPriceDiffenece(String buyPriceDiffenece) { this.buyPriceDiffenece = buyPriceDiffenece; }
     public String getBuyPriceDiffenecePercent() { return buyPriceDiffenecePercent; }
     public void setBuyPriceDiffenecePercent(String buyPriceDiffenecePercent) { this.buyPriceDiffenecePercent = buyPriceDiffenecePercent; }
+
+    public String getTurnoverRate() { return turnoverRate; }
+    public void setTurnoverRate(String turnoverRate) { this.turnoverRate = turnoverRate; }
 
     @Override
     public boolean equals(Object o) {

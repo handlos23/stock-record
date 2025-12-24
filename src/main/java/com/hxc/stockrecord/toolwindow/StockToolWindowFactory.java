@@ -109,7 +109,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy","totalNow","totalNowPercent"};
+            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy","totalNow","totalNowPercent", "turnoverRate"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -122,7 +122,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                     if (columnIndex >= 2 && columnIndex != 7 && columnIndex != 10) {
                         return Number.class;
                     }
-                    return (columnIndex == 7 || columnIndex == 10) ? Boolean.class : String.class;
+                    return String.class;
                 }
 
                 @Override
@@ -153,48 +153,62 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             DefaultCellEditor numberEditor = new DefaultCellEditor(new JTextField());
             table.getColumnModel().getColumn(8).setCellEditor(numberEditor);  // alertPrice
             table.getColumnModel().getColumn(9).setCellEditor(numberEditor);  // buyAlertPrice
+
             // 设置渲染器以更好地显示数字
             DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
                 @Override
                 public Component getTableCellRendererComponent(JTable table, Object value,
                                                                boolean isSelected, boolean hasFocus, int row, int column) {
-                    // 先调用父类方法获取基础组件
-                    Component component = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-                    // 设置默认文本对齐方式
-                    setHorizontalAlignment(SwingConstants.RIGHT);
-
-                    // 格式化数字显示
+                    // 对齐与数字格式化
+                    label.setHorizontalAlignment(SwingConstants.RIGHT);
                     if (value instanceof Number) {
-                        value = String.format("%.2f", ((Number) value).doubleValue());
+                        label.setText(String.format("%.2f", ((Number) value).doubleValue()));
                     }
 
-                    // 根据涨跌设置颜色
-                    if ((column == 3 || column == 11) && value instanceof Double) { // changePercent列
-                        double rate = ((Number) value).doubleValue();
-                        if (!isSelected) { // 只在非选中状态下设置颜色
-                            if (rate > 0) {
-                                component.setForeground(Color.RED);
-                            } else if (rate < 0) {
-                                component.setForeground(Color.BLUE);
-                            } else {
-                                component.setForeground(Color.BLACK);
-                            }
+                    // 根据涨跌设置字体颜色（仅在未选中时）
+//                    if ((column == 3 || column == 11) && value instanceof Number) {
+//                        double rate = ((Number) value).doubleValue();
+//                        if (!isSelected) {
+//                            if (rate > 0) {
+//                                label.setForeground(Color.RED);
+//                            } else if (rate < 0) {
+//                                label.setForeground(Color.BLUE);
+//                            } else {
+//                                label.setForeground(Color.BLACK);
+//                            }
+//                        } else {
+//                            label.setForeground(table.getSelectionForeground());
+//                        }
+//                    } else {
+//                        if (!isSelected) {
+//                            label.setForeground(Color.WHITE);
+//                        } else {
+//                            label.setForeground(table.getSelectionForeground());
+//                        }
+//                    }
+
+                    // 根据 isBuy 列设置整行样式（未选中时）
+                    if (!isSelected) {
+                        Object isBuyObj = table.getValueAt(row, 10);
+                        Boolean isBuy = (isBuyObj instanceof Boolean) ? (Boolean) isBuyObj : Boolean.FALSE;
+                        if (isBuy) {
+                            label.setForeground(Color.WHITE);
+                        } else {
+                            label.setForeground(Color.GRAY);
                         }
-                    } else if (!isSelected) {
-                        // 其他列保持默认颜色
-                        component.setForeground(Color.WHITE);
+                    } else {
+                        label.setForeground(Color.GRAY);
                     }
 
-                    return component;
+                    return label;
                 }
             };
 
-
-            for (int i = 2; i < table.getColumnCount(); i++) {
-                if ((i != 7) && (i != 10)) { // 跳过sendMessage列
-                    table.getColumnModel().getColumn(i).setCellRenderer(renderer);
-                }
+            // 为所有列设置渲染器
+            for (int i = 0; i < table.getColumnCount(); i++) {
+                table.getColumnModel().getColumn(i).setCellRenderer(renderer);
             }
 
             panel.add(new JScrollPane(table), BorderLayout.CENTER);
@@ -323,7 +337,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stock.getBuyAlertPrice(),
                             stock.isBuy(),
                             totalNow,
-                            totalNowPercent
+                            totalNowPercent,
+                            stockInfo.getTurnoverRate()
 
                     };
                     tableModel.addRow(row);
@@ -646,6 +661,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             bean.setTime(values[30]);
             bean.setMax(values[33]);
             bean.setMin(values[34]);
+            bean.setTurnoverRate(values[38] + "%");
 
             BigDecimal now = new BigDecimal(values[3]);
             String costPriceStr = bean.getCostPrise();

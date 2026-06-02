@@ -109,7 +109,7 @@ public class StockToolWindowFactory implements ToolWindowFactory {
 
         public StockToolWindow(Project project) {
             this.project = project;
-            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy","totalNow","totalNowPercent", "turnoverRate"};
+            String[] columnNames = {"code", "name", "currencyPrice", "change", "changePercent", "max", "min", "sendMessage", "alertPrice","buyAlertPrice","isBuy","totalNow","totalNowPercent", "turnoverRate", "volumeRate", "dayAvgPrice"};
             tableModel = new DefaultTableModel(columnNames, 0) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -167,6 +167,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             table.getColumnModel().getColumn(11).setPreferredWidth(100); // totalNow
             table.getColumnModel().getColumn(12).setPreferredWidth(100); // totalNowPercent
             table.getColumnModel().getColumn(13).setPreferredWidth(80);  // turnoverRate
+            table.getColumnModel().getColumn(14).setPreferredWidth(80);  // volumeRate
+            table.getColumnModel().getColumn(15).setPreferredWidth(80);  // dayAvgPrice
 
             // 设置单元格编辑器
             DefaultCellEditor numberEditor = new DefaultCellEditor(new JTextField());
@@ -339,7 +341,9 @@ public class StockToolWindowFactory implements ToolWindowFactory {
                             stock.isBuy(),
                             totalNow,
                             totalNowPercent,
-                            stockInfo.getTurnoverRate()
+                            stockInfo.getTurnoverRate(),
+                            stockInfo.getVolumeRate(),
+                            stockInfo.getDayAvgPrice()
 
                     };
                     tableModel.addRow(row);
@@ -663,6 +667,8 @@ public class StockToolWindowFactory implements ToolWindowFactory {
             bean.setMax(values[33]);
             bean.setMin(values[34]);
             bean.setTurnoverRate(values[38] + "%");
+            bean.setVolumeRate(values[49] + "%");
+            bean.setDayAvgPrice(values[51]);
 
             BigDecimal now = new BigDecimal(values[3]);
             String costPriceStr = bean.getCostPrise();

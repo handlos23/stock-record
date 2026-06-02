@@ -21,6 +21,10 @@ public class StockInfo {
     private String buyPriceDiffenecePercent;
     //换手率
     private String turnoverRate;
+    //量比
+    private String volumeRate;
+    //日均线
+    private String dayAvgPrice;
 
     public StockInfo() {
     }
@@ -88,6 +92,14 @@ public class StockInfo {
 
     public String getTurnoverRate() { return turnoverRate; }
     public void setTurnoverRate(String turnoverRate) { this.turnoverRate = turnoverRate; }
+
+    public String getVolumeRate() { return volumeRate; }
+
+    public void setVolumeRate(String volumeRate) { this.volumeRate = volumeRate; }
+
+    public String getDayAvgPrice() { return dayAvgPrice; }
+
+    public void setDayAvgPrice(String dayAvgPrice) { this.dayAvgPrice = dayAvgPrice; }
 
     @Override
     public boolean equals(Object o) {
